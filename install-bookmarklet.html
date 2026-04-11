@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install DealKart Bookmarklet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: #fff; color: #1a1a1a; border-radius: 20px; padding: 40px; max-width: 600px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        p { color: #666; font-size: 14px; margin-bottom: 24px; }
+        .bookmarklet-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4451e, #e8b84b);
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: grab;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(212, 69, 30, 0.4);
+        }
+        .bookmarklet-link:active { cursor: grabbing; }
+        .steps { text-align: left; margin-top: 24px; }
+        .step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+        .step-num { background: #d4451e; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+        .step-text { font-size: 14px; line-height: 1.5; }
+        .step-text b { color: #d4451e; }
+        .arrow { font-size: 40px; color: #d4451e; margin: 10px 0; }
+        .note { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px; font-size: 12px; color: #0369a1; margin-top: 20px; text-align: left; }
+        .tag-badge { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 13px; display: inline-block; margin-top: 6px; }
+        .feature-list { text-align: left; margin-top: 12px; padding-left: 16px; }
+        .feature-list li { font-size: 13px; color: #444; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>⚡ Install DealKart Quick-Add</h1>
+        <p>Add Amazon products to your DealKart site in one click!</p>
+        <div class="tag-badge">🔗 Affiliate Tag: sandeepku0b19-21 (auto-applied)</div>
+
+        <div class="arrow">⬇ DRAG THIS TO YOUR BOOKMARKS BAR ⬇</div>
+
+        <a class="bookmarklet-link" id="bmLink">⚡ Add to DealKart</a>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-text">First, press <b>Ctrl + Shift + B</b> to show your bookmarks bar</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text"><b>Delete</b> old bookmark first. Then <b>drag</b> the orange button to your bookmarks bar</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text">Go to any <b>Amazon India product page</b> and click <b>"⚡ Add to DealKart"</b></div>
+            </div>
+        </div>
+
+        <div class="note">
+            <b>💡 What it captures:</b>
+            <ul class="feature-list">
+                <li>✅ Product name, price, MRP, rating, reviews</li>
+                <li>✅ <b>All unique product photos</b> (up to 6, full resolution)</li>
+                <li>✅ Clean affiliate link with your tag</li>
+                <li>✅ Auto-detected <b>category & subcategory</b> (Men's/Women's/Unisex)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+    // Build bookmarklet as a plain string — no .toString(), no escaping issues
+    var parts = [];
+    parts.push('javascript:void(function(){');
+    parts.push('try{');
+    parts.push('var n=(document.getElementById("productTitle")||{}).textContent||"";n=n.trim();');
+    parts.push('var pe=document.querySelector(".a-price-whole");');
+    parts.push('var pr=pe?parseInt(pe.textContent.replace(/[^0-9]/g,"")):0;');
+    parts.push('var pb=document.querySelector("#corePriceDisplay_desktop_feature_div")||document.querySelector("#corePrice_desktop")||document.querySelector("#price")||document.body;');
+    parts.push('var me=pb.querySelector(".a-text-strike") || pb.querySelector(".a-price.a-text-price .a-offscreen");');
+    parts.push('var wat=me?me.textContent:"";');
+    parts.push('wat=wat.replace(/\\.\\d+$/,"");');
+    parts.push('var wa=wat?parseInt(wat.replace(/[^0-9]/g,"")):0;');
+    // No 5x price cap
+    parts.push('var re=document.querySelector("#acrPopover .a-icon-alt");');
+    parts.push('var ra=re?parseFloat(re.textContent):4.5;');
+    parts.push('var ve=document.getElementById("acrCustomerReviewText");');
+    parts.push('var rv=ve?parseInt(ve.textContent.replace(/[^0-9]/g,"")):0;');
+    // Image extraction
+    parts.push('var seen={},imgs=[];');
+    parts.push('function cln(u){if(!u||u.length<20)return"";var m=u.match(/\\/images\\/I\\/([A-Za-z0-9\\-\\+\\_]+)\\./);if(m)return"https://m.media-amazon.com/images/I/"+m[1]+".jpg";return u.split("?")[0]}');
+    parts.push('function add(u){var c=cln(u);if(!c||seen[c])return;if(c.indexOf("sprite")>-1||c.indexOf("play")>-1||c.indexOf("pixel")>-1||c.indexOf("icon")>-1||c.indexOf("transparent")>-1||c.indexOf("grey")>-1)return;seen[c]=1;imgs.push(c)}');
+    // Method 1: colorImages in scripts
+    parts.push('var ss=document.querySelectorAll("script:not([src])");');
+    parts.push('for(var i=0;i<ss.length;i++){var t=ss[i].textContent;if(t.indexOf("colorImages")>-1){var mm=t.match(/https?:\\/\\/m\\.media-amazon\\.com\\/images\\/I\\/[A-Za-z0-9\\-\\+\\_]+\\.[a-z]+/g);if(mm)mm.forEach(add);break}}');
+    // Method 2: data-a-dynamic-image
+    parts.push('if(imgs.length<2){var di=document.querySelector("[data-a-dynamic-image]");if(di){try{var o=JSON.parse(di.getAttribute("data-a-dynamic-image"));for(var k in o)add(k)}catch(x){}}}');
+    // Method 3: altImages thumbnails
+    parts.push('if(imgs.length<2){document.querySelectorAll("#altImages img").forEach(function(t){add(t.getAttribute("data-old-hires")||t.src||"")})}');
+    // Method 4: landing image
+    parts.push('if(!imgs.length){var mi=document.getElementById("landingImage")||document.getElementById("imgBlkFront");if(mi)add(mi.getAttribute("data-old-hires")||mi.src)}');
+    parts.push('imgs=imgs.slice(0,6);');
+    // ASIN and link
+    parts.push('var url=location.href;var am=url.match(/\\/dp\\/([A-Z0-9]{10})/i)||url.match(/\\/gp\\/product\\/([A-Z0-9]{10})/i);');
+    parts.push('var asin=am?am[1]:"";var lk=asin?"https://www.amazon.in/dp/"+asin+"?tag=sandeepku0b19-21":url;');
+    parts.push('var bc="";try{var bcE=document.querySelector(".a-breadcrumb")||document.querySelector("#wayfinding-breadcrumbs_feature_div")||document.querySelector(".a-subheader");bc=bcE?bcE.textContent.trim():""}catch(x){}');
+    parts.push('var ttl=document.title||"";bc=bc+" "+ttl;');
+    // Build URL
+    parts.push('var p=new URLSearchParams({quickadd:"1",name:n,price:pr,was:wa,rating:ra,reviews:rv,img:imgs[0]||"",img2:imgs[1]||"",img3:imgs[2]||"",img4:imgs[3]||"",img5:imgs[4]||"",img6:imgs[5]||"",link:lk,breadcrumb:bc});');
+    parts.push('alert("Found "+imgs.length+" photos! Opening DealKart...");');
+    parts.push('window.open("https://dealkart-india.web.app/?"+p.toString(),"dealkart")');
+    parts.push('}catch(e){alert("Bookmarklet Error: "+e.message)}');
+    parts.push('}())');
+
+    document.getElementById('bmLink').href = parts.join('');
+    </script>
+</body>
+</html>

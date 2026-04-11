@@ -1,0 +1,59 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/.env",
+      "**/node_modules/**",
+      "auto-deals.js",
+      "auto-deals-log.txt",
+      "package.json",
+      "package-lock.json"
+    ],
+    "headers": [
+      {
+        "source": "**/*.xml",
+        "headers": [
+          { "key": "Content-Type", "value": "application/xml" }
+        ]
+      },
+      {
+        "source": "**/*.txt",
+        "headers": [
+          { "key": "Content-Type", "value": "text/plain" }
+        ]
+      },
+      {
+        "source": "**/*.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=300" }
+        ]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=600" }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        ]
+      }
+    ],
+    "rewrites": [
+      { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+      { "source": "/robots.txt", "destination": "/robots.txt" },
+      { "source": "/privacy.html", "destination": "/privacy.html" },
+      { "source": "/terms.html", "destination": "/terms.html" },
+      { "source": "/about.html", "destination": "/about.html" },
+      { "source": "/contact.html", "destination": "/contact.html" },
+      { "source": "/install-bookmarklet.html", "destination": "/install-bookmarklet.html" },
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}

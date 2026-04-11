@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us — DealKart India</title>
+    <meta name="description" content="Contact DealKart India for feedback, suggestions, or support. We'd love to hear from you!">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f3; color: #1a1a1a; line-height: 1.7; }
+        .nav { background: #1a1a1a; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .nav-logo { font-size: 22px; font-weight: 700; color: #fff; cursor: pointer; text-decoration: none; }
+        .nav-logo span:not(.nav-badge) { color: #ea580c; }
+        .nav-logo .nav-badge { background: #ea580c; color: #fff !important; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600; vertical-align: super; }
+        .nav-back { color: #fff; text-decoration: none; font-size: 14px; opacity: 0.8; transition: opacity 0.2s; }
+        .nav-back:hover { opacity: 1; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px 60px; }
+        h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .subtitle { color: #6b7280; margin-bottom: 32px; }
+        h2 { font-size: 20px; font-weight: 600; margin: 28px 0 12px; }
+        p { color: #3d3d3d; margin-bottom: 14px; }
+        .card { background: #fff; border-radius: 16px; padding: 36px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 24px 0; }
+        .contact-item { background: #fef7f0; border: 1px solid #fed7aa; border-radius: 12px; padding: 24px; text-align: center; }
+        .contact-icon { font-size: 36px; margin-bottom: 10px; }
+        .contact-label { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+        .contact-value { font-size: 14px; color: #ea580c; word-break: break-all; }
+        .contact-value a { color: #ea580c; text-decoration: none; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px; }
+        input, textarea, select { width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 15px; transition: border-color 0.2s; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234,88,12,0.1); }
+        textarea { resize: vertical; min-height: 120px; }
+        .btn { background: #ea580c; color: #fff; border: none; padding: 14px 36px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn:hover { background: #c2410c; }
+        .success-msg { display: none; background: #dcfce7; color: #166534; border: 1px solid #86efac; border-radius: 10px; padding: 16px; text-align: center; font-weight: 500; margin-top: 16px; }
+        footer { text-align: center; padding: 24px; color: #9ca3af; font-size: 13px; }
+        footer a { color: #ea580c; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="/" class="nav-logo">Deal<span>Kart</span><span class="nav-badge">INDIA</span></a>
+        <a href="/" class="nav-back">← Back to Deals</a>
+    </nav>
+    <div class="container">
+        <div class="card">
+            <h1>Contact Us</h1>
+            <p class="subtitle">We'd love to hear from you! Reach out for feedback, suggestions, or support.</p>
+
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <div class="contact-label">Email</div>
+                    <div class="contact-value"><a href="mailto:dealkartindia@gmail.com">dealkartindia@gmail.com</a></div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🌐</div>
+                    <div class="contact-label">Website</div>
+                    <div class="contact-value"><a href="/">dealkart-india.web.app</a></div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div class="contact-label">Location</div>
+                    <div class="contact-value">India</div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">💬</div>
+                    <div class="contact-label">WhatsApp</div>
+                    <div class="contact-value"><a href="https://wa.me/917893abortnumber?text=Hi%20DealKart!" target="_blank">Chat with us</a></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Send Us a Message</h2>
+            <form id="contactForm" onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <select id="subject">
+                        <option>General Feedback</option>
+                        <option>Report a Deal Issue</option>
+                        <option>Suggest a Product</option>
+                        <option>Partnership Inquiry</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" placeholder="Tell us what's on your mind..." required></textarea>
+                </div>
+                <button type="submit" class="btn">Send Message</button>
+            </form>
+            <div class="success-msg" id="successMsg">
+                ✅ Thank you! Your message has been sent successfully. We'll get back to you soon!
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 DealKart India · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyCfGlyRMJSD4mFweG6e-gaxN8YRfNIV09Q",
+            authDomain: "dealkart-india.firebaseapp.com",
+            projectId: "dealkart-india",
+        });
+        var db = firebase.firestore();
+
+        function submitForm(e) {
+            e.preventDefault();
+            var data = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value,
+                ts: new Date()
+            };
+            db.collection('contacts').add(data).then(function() {
+                document.getElementById('contactForm').style.display = 'none';
+                document.getElementById('successMsg').style.display = 'block';
+            }).catch(function() {
+                alert('Error sending message. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>
