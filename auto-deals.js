@@ -13,7 +13,7 @@ const ACCESS_KEY  = process.env.AMAZON_ACCESS_KEY;
 const SECRET_KEY  = process.env.AMAZON_SECRET_KEY;
 const PARTNER_TAG = process.env.AMAZON_PARTNER_TAG;
 const HOST        = 'webservices.amazon.in';
-const REGION      = 'eu-west-1';
+const REGION      = 'eu-west-1';  // Amazon India PA-API uses eu-west-1
 const FB_API_KEY  = process.env.FIREBASE_API_KEY;
 const FB_PROJECT  = process.env.FIREBASE_PROJECT_ID;
 
@@ -105,7 +105,19 @@ function searchItems(searchIndex, keywords) {
             console.log(`  ⚠️  API error for "${keywords}":`, json.Errors[0].Message);
             resolve([]);
           } else {
-            resolve(json.SearchResult?.Items || []);
+            const items = json.SearchResult?.Items || [];
+            
+            // Check for potential missing price data errors
+            if (items.length > 0) {
+              const firstItem = items[0];
+              if (!firstItem.Offers) {
+                console.log(`  ⚠️  Empty "Offers" for "${keywords}" ❌ (No sales yet OR wrong request)`);
+              } else if (!firstItem.Offers.Listings || firstItem.Offers.Listings.length === 0) {
+                console.log(`  ⚠️  Missing "Listings" for "${keywords}" ❌ (No sales yet OR wrong request)`);
+              }
+            }
+            
+            resolve(items);
           }
         } catch (e) { resolve([]); }
       });
@@ -160,6 +172,8 @@ async function addToFirestore(product) {
         subcat: { stringValue: product.subcat || '' },
         price: { integerValue: String(product.price) },
         was: { integerValue: String(product.was) },
+        // BUG FIX: Store top-level img field (first image) so frontend p.img fallback works
+        img: { stringValue: product.images[0] || '' },
         images: { arrayValue: { values: product.images.map(u => ({ stringValue: u })) } },
         link: { stringValue: product.link },
         rating: { doubleValue: product.rating },
@@ -287,12 +301,6 @@ function parseItem(item, cat) {
   const reviews = item.CustomerReviews?.Count || 0;
   const asin = item.ASIN || '';
 
-  // If the API gives us `214900` for ₹2,149, we need to divide by 100.
-  // Using 10,000 threshold because finding real things that cost >₹10,000 perfectly ending in 00 is rare,
-  // whereas paise prices for >₹100 always end in 00 and are >10,000.
-  if (rawPrice > 10000 && rawPrice % 100 === 0) rawPrice = rawPrice / 100;
-  if (rawWas > 10000 && rawWas % 100 === 0) rawWas = rawWas / 100;
-
   let price = Math.round(rawPrice);
   let was = Math.round(rawWas || price * 1.3);
 
@@ -338,12 +346,20 @@ async function main() {
   let totalAdded = 0;
   let totalSkipped = 0;
 
-  for (const catConfig of SEARCH_QUERIES) {
+  // ─── CATEGORY ROTATION ───
+  // Only run ~5 categories per cycle to conserve API quota
+  // Rotates based on current hour so all categories get covered over time
+  const hour = new Date().getHours();
+  const rotationIndex = Math.floor(hour / 6) % 2; // alternates between 0 and 1
+  const categoriesToRun = SEARCH_QUERIES.filter((_, i) => i % 2 === rotationIndex);
+  console.log(`📋 Running ${categoriesToRun.length} of ${SEARCH_QUERIES.length} categories this cycle (rotation ${rotationIndex})\n`);
+
+  for (const catConfig of categoriesToRun) {
     console.log(`\n🏷️  ${catConfig.cat.toUpperCase()}`);
 
-    // Pick 4 random keywords from the list for variety
+    // Pick 2 random keywords (reduced from 4 to conserve API quota)
     const shuffled = catConfig.keywords.sort(() => Math.random() - 0.5);
-    const selectedKeywords = shuffled.slice(0, 4);
+    const selectedKeywords = shuffled.slice(0, 2);
 
     for (const keyword of selectedKeywords) {
       console.log(`   🔍 Searching: "${keyword}"...`);
