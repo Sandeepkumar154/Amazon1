@@ -1259,6 +1259,33 @@
             font-size: 12px;
         }
 
+        .amazon-disclaimers {
+            max-width: 700px;
+            margin: 0 auto 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, .05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .amazon-disclaimers p {
+            font-size: 10px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, .35);
+            margin-bottom: 6px;
+        }
+
+        .amazon-disclaimers p:last-child {
+            margin-bottom: 0;
+        }
+
+        .amazon-disclaimers .disclaimer-label {
+            color: rgba(255, 255, 255, .5);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         /* MODALS */
         .modal-overlay {
             position: fixed;
@@ -1734,6 +1761,10 @@
         </div>
 
         <footer>
+            <div class="amazon-disclaimers">
+                <p><span class="disclaimer-label">Pricing Disclaimer:</span> Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on Amazon.in at the time of purchase will apply to the purchase of the product.</p>
+                <p><span class="disclaimer-label">Content Notice:</span> Certain content that appears on this site comes from Amazon Seller Services Private Limited. This content is provided 'as is' and is subject to change or removal at any time.</p>
+            </div>
             <p style="margin-bottom:4px;">© 2026 DealKart India · Curated deals for smart shoppers</p>
             <p>As an Amazon Associate we earn from qualifying purchases · Prices may vary</p>
             <p style="margin-top:8px;font-size:12px;"><a href="/about.html"
@@ -1785,7 +1816,7 @@
                     style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;"></i>
                 <input type="text" id="searchInput" placeholder="Search products..."
                     oninput="searchProducts(this.value)"
-                    style="width:100%;padding:12px 14px 12px 40px;border:1px solid #e5e7eb;border-radius:12px;font-size:14px;background:var(--bg2);color:var(--ink1);outline:none;transition:border-color .2s;"
+                    style="width:100%;padding:12px 14px 12px 40px;border:1px solid #e5e7eb;border-radius:12px;font-size:14px;background:var(--bg2);color:var(--ink);outline:none;transition:border-color .2s;"
                     onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='#e5e7eb'">
             </div>
         </div>
@@ -1802,6 +1833,10 @@
         </div>
 
         <footer>
+            <div class="amazon-disclaimers">
+                <p><span class="disclaimer-label">Pricing Disclaimer:</span> Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on Amazon.in at the time of purchase will apply to the purchase of the product.</p>
+                <p><span class="disclaimer-label">Content Notice:</span> Certain content that appears on this site comes from Amazon Seller Services Private Limited. This content is provided 'as is' and is subject to change or removal at any time.</p>
+            </div>
             <p style="margin-bottom:4px;">© 2026 DealKart India · Curated deals for smart shoppers</p>
             <p>As an Amazon Associate we earn from qualifying purchases · Prices may vary</p>
             <p style="margin-top:8px;font-size:12px;"><a href="/about.html"
