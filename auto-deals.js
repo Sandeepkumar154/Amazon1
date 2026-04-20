@@ -47,6 +47,18 @@ const SEARCH_QUERIES = [
 
   // ── PET SUPPLIES (Subcats: Dog Food/Accessories, Cat Food/Accessories, Fish/Aquarium, Bird, Pet Grooming) ──
   { cat: 'pets', keywords: ['dog food pedigree', 'dog collar leash', 'cat toy interactive', 'pet grooming kit', 'dog bed washable', 'cat litter box', 'aquarium filter pump', 'bird cage large', 'dog chew toy', 'cat food whiskas', 'dog shampoo tick', 'fish food pellets'] },
+
+  // ── SPORTS & FITNESS (Subcats: Cricket, Football, Badminton, Gym Equipment, Yoga, Running, Cycling, Swimming, Sports Nutrition) ──
+  { cat: 'sports', keywords: ['cricket bat english willow', 'football shoes men', 'badminton racket yonex', 'dumbbells adjustable', 'yoga mat thick premium', 'running shoes men nike', 'cycling accessories', 'swimming goggles', 'protein powder whey', 'gym gloves men', 'cricket ball leather', 'resistance bands set', 'treadmill home', 'sports bra women', 'skipping rope weighted', 'table tennis racket', 'boxing gloves', 'knee cap support'] },
+
+  // ── GROCERIES & GOURMET (Subcats: Snacks, Beverages, Cooking Essentials, Dry Fruits, Health Foods, Spices, Chocolates, Organic) ──
+  { cat: 'grocery', keywords: ['dry fruits combo pack', 'green tea organic', 'honey pure natural', 'dark chocolate premium', 'masala spice box', 'oats breakfast', 'peanut butter', 'basmati rice', 'olive oil extra virgin', 'protein bar healthy', 'cookies biscuits combo', 'coffee beans arabica', 'ghee pure cow', 'jaggery organic', 'trail mix nuts'] },
+
+  // ── AUTOMOTIVE (Subcats: Car Accessories, Bike Accessories, Car Electronics, Helmet, Car Care, Tools) ──
+  { cat: 'auto', keywords: ['car phone holder dashboard', 'bike helmet full face', 'car seat cover leather', 'dash cam car', 'car vacuum cleaner', 'bike mobile holder', 'car perfume air freshener', 'tyre inflator portable', 'car charger fast', 'bike accessories combo', 'car cleaning kit', 'gps tracker vehicle'] },
+
+  // ── OFFICE & STATIONERY (Subcats: Pens, Notebooks, Desk Organizers, Printers, School Supplies, Art Supplies) ──
+  { cat: 'office', keywords: ['pen parker premium', 'notebook diary premium', 'desk organizer wooden', 'printer ink cartridge', 'school bag kids', 'art supplies drawing', 'calculator scientific', 'whiteboard marker set', 'file folder organizer', 'stamp pad ink', 'pencil box kids', 'geometry box set'] },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -55,9 +67,8 @@ const SEARCH_QUERIES = [
 
 function scrapeAmazonSearch(keyword) {
   return new Promise((resolve) => {
-    // Amazon India search URL — price-filtered for affordable, India-relevant products
-    // rh=p_36:20000-500000 means ₹200–₹5,000 price range (value in paisa)
-    const amazonURL = `https://www.amazon.in/s?k=${encodeURIComponent(keyword)}&rh=p_36%3A20000-500000&s=popularity-rank&i=aps`;
+    // Amazon India search — sorted by popularity, no price filter (all price ranges)
+    const amazonURL = `https://www.amazon.in/s?k=${encodeURIComponent(keyword)}&s=popularity-rank&i=aps`;
     const params = new URLSearchParams({
       url: amazonURL,
       country: 'in'
@@ -444,6 +455,64 @@ function detectSubcategory(name, cat) {
     return 'Dog Accessories'; // fallback
   }
 
+  // ── SPORTS & FITNESS ──
+  if (cat === 'sports') {
+    if (/\bcricket|bat|wicket|stump|pad|guard/.test(text)) return 'Cricket';
+    if (/\bfootball|soccer|fifa|goal.?keep/.test(text)) return 'Football';
+    if (/\bbadminton|shuttlecock|racket|racquet/.test(text)) return 'Badminton';
+    if (/\bdumbbell|barbell|bench.?press|weight|kettlebell|pull.?up|push.?up|gym/.test(text)) return 'Gym Equipment';
+    if (/\byoga|meditation|pilates|stretching|foam.?roller/.test(text)) return 'Yoga & Meditation';
+    if (/\brunning|jogging|walking|marathon|treadmill/.test(text)) return 'Running & Walking';
+    if (/\bcycl|bike|bicycle|helmet/.test(text)) return 'Cycling';
+    if (/\bswim|pool|goggles|swim.?cap/.test(text)) return 'Swimming';
+    if (/\bprotein|bcaa|creatine|pre.?workout|supplement|whey|nutrition/.test(text)) return 'Sports Nutrition';
+    if (/\btable.?tennis|ping.?pong/.test(text)) return 'Badminton';
+    if (/\bbox|punch|glove|martial/.test(text)) return 'Gym Equipment';
+    if (/\bskip|rope|band|resistance|exercise/.test(text)) return 'Gym Equipment';
+    if (/\bsport|athletic|fitness/.test(text)) return 'Gym Equipment';
+    return 'Gym Equipment'; // fallback
+  }
+
+  // ── GROCERIES & GOURMET ──
+  if (cat === 'grocery') {
+    if (/\bsnack|biscuit|chip|namkeen|cookie|cracker|munch/.test(text)) return 'Snacks & Biscuits';
+    if (/\btea|coffee|juice|drink|water|beverage|soda|shake/.test(text)) return 'Beverages';
+    if (/\boil|ghee|atta|flour|rice|dal|salt|sugar|vinegar/.test(text)) return 'Cooking Essentials';
+    if (/\bdry.?fruit|almond|cashew|walnut|pistachio|raisin|nut|seed|trail.?mix/.test(text)) return 'Dry Fruits & Nuts';
+    if (/\boat|muesli|granola|protein|health|diet|low.?cal|sugar.?free/.test(text)) return 'Health Foods';
+    if (/\bspice|masala|turmeric|cumin|pepper|chilli|cinnamon|cardamom/.test(text)) return 'Spices & Masala';
+    if (/\bchocolate|candy|sweet|mithai|laddu|barfi/.test(text)) return 'Chocolates & Sweets';
+    if (/\borganic|natural|pure|herbal|ayurved/.test(text)) return 'Organic & Natural';
+    if (/\bhoney|jaggery|jam|spread|peanut.?butter/.test(text)) return 'Health Foods';
+    return 'Cooking Essentials'; // fallback
+  }
+
+  // ── AUTOMOTIVE ──
+  if (cat === 'auto') {
+    if (/\bcar\b.*\b(accessor|cover|seat|cushion|mat|mirror|visor|sunshade|organiz)/.test(text)) return 'Car Accessories';
+    if (/\bbike\b.*\b(accessor|glove|tank|cover|lock|chain|handlebar)/.test(text)) return 'Bike Accessories';
+    if (/\bdash.?cam|gps|charger|bluetooth|music|stereo|speaker|led|light|camera/.test(text)) return 'Car Electronics';
+    if (/\bhelmet|guard|jacket|vest|reflective|safety|knee/.test(text)) return 'Helmet & Safety';
+    if (/\bwash|clean|polish|wax|shampoo|duster|vacuum|microfiber|sponge/.test(text)) return 'Car Care';
+    if (/\btool|jack|wrench|inflat|compressor|pump|repair|kit/.test(text)) return 'Tools & Equipment';
+    if (/\bcar\b/.test(text)) return 'Car Accessories';
+    if (/\bbike|motorcycle|scooter/.test(text)) return 'Bike Accessories';
+    if (/\bphone.*holder|mobile.*holder|mount/.test(text)) return 'Car Electronics';
+    return 'Car Accessories'; // fallback
+  }
+
+  // ── OFFICE & STATIONERY ──
+  if (cat === 'office') {
+    if (/\bpen\b|ballpoint|fountain|gel.?pen|roller.?ball|ink.?pen|marker|highlighter/.test(text)) return 'Pens & Writing';
+    if (/\bnotebook|diary|journal|planner|register|ruled|unruled/.test(text)) return 'Notebooks & Diaries';
+    if (/\bdesk|organiz|tray|holder|stand|paper.?weight|table|file|folder/.test(text)) return 'Desk Organizers';
+    if (/\bprinter|cartridge|ink|toner|scanner|paper|a4/.test(text)) return 'Printers & Ink';
+    if (/\bschool|bag|backpack|lunch|water.?bottle|compass|geometry|pencil.?box|eraser|ruler|sharpener/.test(text)) return 'School Supplies';
+    if (/\bart|paint|brush|canvas|sketch|drawing|crayon|colour|color|pastel|easel/.test(text)) return 'Art Supplies';
+    if (/\bcalculator|stapler|tape|glue|scissor|cutter|stamp|punch|laminator|whiteboard/.test(text)) return 'School Supplies';
+    return 'School Supplies'; // fallback
+  }
+
   return '';
 }
 
@@ -508,9 +577,6 @@ async function main() {
 
         // Skip low ratings
         if (raw.rating < 4.0) continue;
-
-        // Price cap: Skip very expensive imported products (user wants affordable deals)
-        if (raw.price > 10000) continue;
 
         // Calculate discount (need at least 20% off to be a real deal)
         const discount = raw.was > 0 ? ((raw.was - raw.price) / raw.was * 100) : 0;
@@ -587,29 +653,6 @@ async function repairSubcategories() {
 
               if (!name || !cat) continue;
               checked++;
-
-              // Deactivate overpriced legacy items (over ₹10,000)
-              const price = parseInt(fields.price?.integerValue || '0');
-              if (price > 10000) {
-                const rp = doc.name.split('/documents/')[1];
-                if (rp) {
-                  const bd = JSON.stringify({ fields: { active: { booleanValue: false } } });
-                  await new Promise((res2) => {
-                    const opts = {
-                      hostname: 'firestore.googleapis.com',
-                      path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${rp}?updateMask.fieldPaths=active`,
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bd) }
-                    };
-                    const rq = https.request(opts, (r) => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>res2(true)); });
-                    rq.on('error', () => res2(false));
-                    rq.write(bd); rq.end();
-                  });
-                  repaired++;
-                  console.log(`   💀 Deactivated overpriced: ${name.substring(0, 45)}... (₹${price})`);
-                }
-                continue;
-              }
 
               const newSubcat = detectSubcategory(name, cat);
               if (newSubcat && newSubcat !== oldSubcat) {

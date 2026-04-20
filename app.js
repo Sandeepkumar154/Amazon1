@@ -36,7 +36,11 @@ const NICHES = {
   books:       { emoji:'📚', label:'Books & Toys',           color:'#4c1d95', bg:'#ede9fe' },
   personal:    { emoji:'💊', label:'Personal Care',          color:'#164e63', bg:'#cffafe' },
   baby:        { emoji:'👶', label:'Baby Products',          color:'#9a3412', bg:'#ffedd5' },
-  pets:        { emoji:'🐶', label:'Pet Supplies',           color:'#134e4a', bg:'#ccfbf1' }
+  pets:        { emoji:'🐶', label:'Pet Supplies',           color:'#134e4a', bg:'#ccfbf1' },
+  sports:      { emoji:'🏏', label:'Sports & Fitness',       color:'#b91c1c', bg:'#fee2e2' },
+  grocery:     { emoji:'🛒', label:'Groceries & Gourmet',    color:'#a16207', bg:'#fef9c3' },
+  auto:        { emoji:'🚗', label:'Automotive',             color:'#475569', bg:'#e2e8f0' },
+  office:      { emoji:'🖊️', label:'Office & Stationery',    color:'#6d28d9', bg:'#f5f3ff' }
 };
 
 const SUBCATEGORIES = {
@@ -47,7 +51,11 @@ const SUBCATEGORIES = {
   books:       ['Fiction', 'Non-Fiction', 'Self-Help', 'Educational', 'Kids Books', 'Action Toys', 'Board Games', 'Puzzles'],
   personal:    ["Men's Grooming", "Women's Hygiene", 'Oral Care', "Women's Hair Care", "Men's Hair Care", 'Body Care', 'Health & Wellness'],
   baby:        ['Baby Boy Clothing', 'Baby Girl Clothing', 'Feeding Essentials', 'Diapers & Wipes', 'Baby Toys', 'Bath & Skin Care', 'Gear & Safety'],
-  pets:        ['Dog Food', 'Dog Accessories', 'Cat Food', 'Cat Accessories', 'Fish & Aquarium', 'Bird Supplies', 'Pet Grooming']
+  pets:        ['Dog Food', 'Dog Accessories', 'Cat Food', 'Cat Accessories', 'Fish & Aquarium', 'Bird Supplies', 'Pet Grooming'],
+  sports:      ['Cricket', 'Football', 'Badminton', 'Gym Equipment', 'Yoga & Meditation', 'Running & Walking', 'Cycling', 'Swimming', 'Sports Nutrition'],
+  grocery:     ['Snacks & Biscuits', 'Beverages', 'Cooking Essentials', 'Dry Fruits & Nuts', 'Health Foods', 'Spices & Masala', 'Chocolates & Sweets', 'Organic & Natural'],
+  auto:        ['Car Accessories', 'Bike Accessories', 'Car Electronics', 'Helmet & Safety', 'Car Care', 'Tools & Equipment'],
+  office:      ['Pens & Writing', 'Notebooks & Diaries', 'Desk Organizers', 'Printers & Ink', 'School Supplies', 'Art Supplies']
 };
 
 let productsCache = [];
