@@ -31,7 +31,7 @@ const SEARCH_QUERIES = [
   { cat: 'home', keywords: ['non stick cookware set', 'home decor wall art', 'bedsheet double bed cotton', 'vacuum cleaner robot', 'led bulb smart', 'non stick tawa', 'water bottle steel thermos', 'office chair ergonomic', 'study table foldable', 'curtains living room blackout', 'coffee mug ceramic set', 'air purifier room', 'mixer grinder juicer', 'storage organiser wardrobe', 'kitchen rack steel', 'wall clock decorative', 'garden tools set', 'sofa cushion cover'] },
 
   // ── ELECTRONICS (Subcats: Smartphones, Laptops, Wired/Wireless Headphones, Smartwatches, Speakers, Cameras, Chargers, Power Banks, Smart Home) ──
-  { cat: 'electronics', keywords: ['wireless earbuds bluetooth', 'smartwatch men fitness', 'power bank 20000mah', 'bluetooth speaker portable', 'fast charger type c', 'gaming mouse rgb', 'mechanical keyboard', 'usb c hub multiport', 'laptop stand adjustable', 'wifi router dual band', 'smartphone under 15000', 'webcam hd 1080p', 'smart plug wifi', 'wired earphones bass', 'tablet android', 'smart bulb led', 'security camera wifi', 'noise cancelling headphones'] },
+  { cat: 'electronics', keywords: ['wireless earbuds bluetooth', 'smartwatch under 2000', 'power bank 10000mah', 'bluetooth speaker portable', 'fast charger type c', 'gaming mouse', 'usb c hub', 'laptop stand', 'wifi router', 'smartphone under 15000', 'smart plug wifi', 'wired earphones bass', 'smart bulb led', 'security camera wifi', 'headphones over ear'] },
 
   // ── BOOKS (Subcats: Fiction, Non-Fiction, Self-Help, Educational, Kids Books) ──
   { cat: 'books', keywords: ['fiction novel bestseller', 'self help book motivational', 'ncert textbook', 'children story book illustrated', 'business biography book', 'cookbook indian recipes', 'stock market investing book', 'productivity planner journal', 'coloring book kids', 'upsc preparation book', 'hindi novel', 'english grammar book'] },
@@ -55,8 +55,9 @@ const SEARCH_QUERIES = [
 
 function scrapeAmazonSearch(keyword) {
   return new Promise((resolve) => {
-    // Amazon India search URL with sort by featured and high-rating filter
-    const amazonURL = `https://www.amazon.in/s?k=${encodeURIComponent(keyword)}&s=review-rank&i=aps`;
+    // Amazon India search URL — price-filtered for affordable, India-relevant products
+    // rh=p_36:20000-500000 means ₹200–₹5,000 price range (value in paisa)
+    const amazonURL = `https://www.amazon.in/s?k=${encodeURIComponent(keyword)}&rh=p_36%3A20000-500000&s=popularity-rank&i=aps`;
     const params = new URLSearchParams({
       url: amazonURL,
       country: 'in'
@@ -308,8 +309,9 @@ function detectSubcategory(name, cat) {
     let gender = '';
     if (/\bkids|children|infant|school/.test(text)) gender = 'Kids';
     else if (text.includes('unisex')) gender = 'Unisex';
-    else if (/\bmen('s|\s|$)|\bboy\b/.test(text) || text.includes('male')) gender = "Men's";
+    // IMPORTANT: Check women BEFORE men — 'women' contains 'men'!
     else if (/\bwomen|ladies|\bgirl\b|female/.test(text)) gender = "Women's";
+    else if (/\bmen('s|\s|$)|\bboy\b/.test(text) || text.includes('male')) gender = "Men's";
 
     let type = '';
     if (/\b(shoe|sneaker|sandal|slipper|boot|heel|loafer|floater|flip.?flop|croc|moccasin)\b/.test(text)) type = 'Footwear';
@@ -502,9 +504,12 @@ async function main() {
         // Skip low ratings
         if (raw.rating < 4.0) continue;
 
-        // Calculate discount
+        // Price cap: Skip very expensive imported products (user wants affordable deals)
+        if (raw.price > 10000) continue;
+
+        // Calculate discount (need at least 20% off to be a real deal)
         const discount = raw.was > 0 ? ((raw.was - raw.price) / raw.was * 100) : 0;
-        if (discount < 15) continue;
+        if (discount < 20) continue;
 
         // Build product object matching Firestore schema
         const product = {
@@ -535,10 +540,222 @@ async function main() {
   }
 
   console.log('\n' + '═'.repeat(55));
-  console.log(`✅ Done! Scraped ${totalScraped} products total.`);
+  console.log(`✅ Scraping done! ${totalScraped} products found.`);
   console.log(`   ➕ Added ${totalAdded} new deals`);
   console.log(`   ⏩ Skipped ${totalSkipped} duplicates`);
-  console.log('═'.repeat(55) + '\n');
+  console.log('═'.repeat(55));
+
+  // ─── LIVE PRICE CHECK on existing products ───
+  console.log('\n🔄 Running live price check on existing products...');
+  await refreshPrices();
+
+  console.log('\n✅ All done!\n');
+}
+
+// ═══════════════════════════════════════════════════
+// ─── LIVE PRICE REFRESH ───
+// Scrapes each product's Amazon page and updates Firestore
+// ═══════════════════════════════════════════════════
+
+async function getExistingProducts() {
+  return new Promise((resolve) => {
+    const products = [];
+
+    function fetchPage(pageToken = '') {
+      let url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/products?pageSize=300`;
+      if (pageToken) url += `&pageToken=${pageToken}`;
+
+      https.get(url, (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            (json.documents || []).forEach(doc => {
+              const fields = doc.fields || {};
+              const link = fields.link?.stringValue || '';
+              const asinMatch = link.match(/\/dp\/([A-Z0-9]{10})/i);
+              if (!asinMatch) return;
+
+              products.push({
+                docPath: doc.name, // full Firestore path
+                asin: asinMatch[1],
+                name: fields.name?.stringValue || '',
+                price: parseInt(fields.price?.integerValue || '0'),
+                was: parseInt(fields.was?.integerValue || '0'),
+                active: fields.active?.booleanValue !== false
+              });
+            });
+
+            if (json.nextPageToken) {
+              fetchPage(json.nextPageToken);
+            } else {
+              resolve(products);
+            }
+          } catch (e) { resolve(products); }
+        });
+      }).on('error', () => resolve(products));
+    }
+
+    fetchPage();
+  });
+}
+
+function scrapeProductPrice(asin) {
+  return new Promise((resolve) => {
+    const amazonURL = `https://www.amazon.in/dp/${asin}`;
+    const params = new URLSearchParams({ url: amazonURL, country: 'in' });
+
+    const options = {
+      hostname: 'api.apilayer.com',
+      path: `/adv_scraper/scraper?${params}`,
+      method: 'GET',
+      headers: { 'apikey': SCRAPER_KEY }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode !== 200 || !json.data) {
+            resolve(null);
+            return;
+          }
+
+          const html = json.data;
+
+          // Extract current price from product page
+          let price = 0;
+          const priceMatch = html.match(/class="a-price-whole">([^<]+)/);
+          if (priceMatch) price = parseInt(priceMatch[1].replace(/[,.\s]/g, ''));
+          if (!price) {
+            const offMatch = html.match(/class="a-offscreen">₹\s*([\d,]+)/);
+            if (offMatch) price = parseInt(offMatch[1].replace(/,/g, ''));
+          }
+
+          // Extract MRP
+          let was = 0;
+          const wasMatch = html.match(/a-text-price[^>]*>.*?class="a-offscreen">₹?\s*([\d,]+)/s);
+          if (wasMatch) was = parseInt(wasMatch[1].replace(/,/g, ''));
+          if (was <= price) was = 0;
+
+          // Check if product is unavailable
+          const unavailable = /currently unavailable|not available/i.test(html);
+
+          resolve({ price, was, unavailable });
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.end();
+  });
+}
+
+function updateProductPrice(docPath, price, was) {
+  return new Promise((resolve) => {
+    // Extract the relative path from the full document path
+    const relativePath = docPath.split('/documents/')[1];
+    if (!relativePath) { resolve(false); return; }
+
+    const updateObj = {
+      fields: {
+        price: { integerValue: String(price) },
+        was: { integerValue: String(was) },
+        priceUpdatedAt: { timestampValue: new Date().toISOString() }
+      }
+    };
+
+    const body = JSON.stringify(updateObj);
+    const options = {
+      hostname: 'firestore.googleapis.com',
+      path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${relativePath}?updateMask.fieldPaths=price&updateMask.fieldPaths=was&updateMask.fieldPaths=priceUpdatedAt`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve(res.statusCode === 200));
+    });
+    req.on('error', () => resolve(false));
+    req.write(body);
+    req.end();
+  });
+}
+
+function deactivateProduct(docPath) {
+  return new Promise((resolve) => {
+    const relativePath = docPath.split('/documents/')[1];
+    if (!relativePath) { resolve(false); return; }
+
+    const body = JSON.stringify({ fields: { active: { booleanValue: false } } });
+    const options = {
+      hostname: 'firestore.googleapis.com',
+      path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${relativePath}?updateMask.fieldPaths=active`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve(res.statusCode === 200));
+    });
+    req.on('error', () => resolve(false));
+    req.write(body);
+    req.end();
+  });
+}
+
+async function refreshPrices() {
+  const products = await getExistingProducts();
+  const activeProducts = products.filter(p => p.active);
+  console.log(`   📦 Found ${activeProducts.length} active products to check`);
+
+  // Check up to 10 products per cycle (conserve API quota)
+  // Pick the oldest-updated or random selection
+  const toCheck = activeProducts.sort(() => Math.random() - 0.5).slice(0, 10);
+
+  let updated = 0;
+  let deactivated = 0;
+  let unchanged = 0;
+
+  for (const product of toCheck) {
+    const priceData = await scrapeProductPrice(product.asin);
+
+    if (!priceData) {
+      unchanged++;
+      continue;
+    }
+
+    if (priceData.unavailable) {
+      // Product no longer available — hide it
+      await deactivateProduct(product.docPath);
+      deactivated++;
+      console.log(`   ❌ Deactivated: ${product.name.substring(0, 40)}... (unavailable)`);
+      continue;
+    }
+
+    if (priceData.price > 0 && priceData.price !== product.price) {
+      const oldPrice = product.price;
+      await updateProductPrice(product.docPath, priceData.price, priceData.was || product.was);
+      updated++;
+      const arrow = priceData.price < oldPrice ? '📉' : '📈';
+      console.log(`   ${arrow} Updated: ${product.name.substring(0, 40)}... ₹${oldPrice} → ₹${priceData.price}`);
+    } else {
+      unchanged++;
+    }
+
+    // Rate limit
+    await new Promise(r => setTimeout(r, 2000));
+  }
+
+  console.log(`   📊 Price check: ${updated} updated, ${deactivated} deactivated, ${unchanged} unchanged`);
 }
 
 main().catch(console.error);
