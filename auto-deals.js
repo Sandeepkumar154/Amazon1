@@ -545,11 +545,94 @@ async function main() {
   console.log(`   ⏩ Skipped ${totalSkipped} duplicates`);
   console.log('═'.repeat(55));
 
+  // ─── REPAIR SUBCATEGORIES on existing products ───
+  console.log('\n🔧 Repairing subcategories on existing products...');
+  await repairSubcategories();
+
   // ─── LIVE PRICE CHECK on existing products ───
   console.log('\n🔄 Running live price check on existing products...');
   await refreshPrices();
 
   console.log('\n✅ All done!\n');
+}
+
+// ═══════════════════════════════════════════════════
+// ─── SUBCATEGORY REPAIR ───
+// Re-runs detectSubcategory on all existing products and patches mismatches
+// ═══════════════════════════════════════════════════
+
+async function repairSubcategories() {
+  return new Promise((resolve) => {
+    let url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/products?pageSize=300`;
+
+    function fetchAndRepair(pageUrl, repaired = 0, checked = 0) {
+      https.get(pageUrl, (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', async () => {
+          try {
+            const json = JSON.parse(data);
+            const docs = json.documents || [];
+
+            for (const doc of docs) {
+              const fields = doc.fields || {};
+              const name = fields.name?.stringValue || '';
+              const cat = fields.cat?.stringValue || '';
+              const oldSubcat = fields.subcat?.stringValue || '';
+
+              if (!name || !cat) continue;
+              checked++;
+
+              const newSubcat = detectSubcategory(name, cat);
+              if (newSubcat && newSubcat !== oldSubcat) {
+                // Patch subcat in Firestore
+                const relativePath = doc.name.split('/documents/')[1];
+                if (!relativePath) continue;
+
+                const body = JSON.stringify({
+                  fields: { subcat: { stringValue: newSubcat } }
+                });
+                const patchDone = await new Promise((res2) => {
+                  const options = {
+                    hostname: 'firestore.googleapis.com',
+                    path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${relativePath}?updateMask.fieldPaths=subcat`,
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+                  };
+                  const req = https.request(options, (r) => {
+                    let d = '';
+                    r.on('data', c => d += c);
+                    r.on('end', () => res2(r.statusCode === 200));
+                  });
+                  req.on('error', () => res2(false));
+                  req.write(body);
+                  req.end();
+                });
+
+                if (patchDone) {
+                  repaired++;
+                  console.log(`   🔄 ${name.substring(0, 45)}... "${oldSubcat}" → "${newSubcat}"`);
+                }
+              }
+            }
+
+            if (json.nextPageToken) {
+              const nextUrl = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/products?pageSize=300&pageToken=${json.nextPageToken}`;
+              fetchAndRepair(nextUrl, repaired, checked);
+            } else {
+              console.log(`   📊 Checked ${checked} products, repaired ${repaired} subcategories`);
+              resolve();
+            }
+          } catch (e) {
+            console.log(`   ⚠️ Repair error:`, e.message);
+            resolve();
+          }
+        });
+      }).on('error', () => resolve());
+    }
+
+    fetchAndRepair(url);
+  });
 }
 
 // ═══════════════════════════════════════════════════
