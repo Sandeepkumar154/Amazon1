@@ -313,12 +313,15 @@ function detectSubcategory(name, cat) {
     else if (/\bwomen|ladies|\bgirl\b|female/.test(text)) gender = "Women's";
     else if (/\bmen('s|\s|$)|\bboy\b/.test(text) || text.includes('male')) gender = "Men's";
 
+    // Skip non-fashion items that sometimes appear in fashion searches
+    if (/\bpencil.?case|stationery|pen.?stand|eraser|ruler\b/.test(text)) return 'Accessories';
+
     let type = '';
     if (/\b(shoe|sneaker|sandal|slipper|boot|heel|loafer|floater|flip.?flop|croc|moccasin)\b/.test(text)) type = 'Footwear';
     else if (/\b(kurta|saree|lehenga|ethnic|sherwani|salwar|dupatta|anarkali|dhoti|lungi|churidar)\b/.test(text)) type = 'Ethnic Wear';
     else if (/\b(jeans|denim|shirt|t-?shirt|tshirt|jacket|dress|top|shorts|hoodie|blazer|trouser|pant|skirt|sweater|cardigan|coat|pullover|polo)\b/.test(text)) type = 'Western Wear';
     else if (/\b(sport|gym|track|yoga|running|athletic|workout|fitness|jogger)\b/.test(text)) type = 'Sportswear';
-    else if (/\b(watch|bag|wallet|belt|cap|hat|scarf|stole|ring|bracelet|earring|necklace|sunglass|backpack|purse|clutch)\b/.test(text)) type = 'Accessories';
+    else if (/\b(watch|bag|wallet|belt|cap|hat|scarf|stole|ring|bracelet|earring|necklace|sunglass|backpack|purse|clutch|case)\b/.test(text)) type = 'Accessories';
 
     if (gender === 'Kids') return 'Kids Wear';
     if (gender && type) return gender + ' ' + type;
@@ -381,10 +384,11 @@ function detectSubcategory(name, cat) {
   // ── BOOKS & TOYS ──
   // Subcats: Fiction, Non-Fiction, Self-Help, Educational, Kids Books, Action Toys, Board Games, Puzzles
   if (cat === 'books') {
-    // Toys first (since they search under 'books' category)
+    // Toys & Collectibles first (since they search under 'books' category)
     if (/\baction.?figure|figurine|doll|toy.?car|robot|superhero|marvel|dc.?comics|star.?wars|transformer|lego|nerf|hot.?wheel/.test(text)) return 'Action Toys';
+    if (/\bfunko|pop!|vinyl.?figure|collectible.?figure|bobble.?head|schleich|bendable.?figure/.test(text)) return 'Action Toys';
     if (/\bboard.?game|monopoly|chess|card.?game|scrabble|uno|ludo|carrom|catan|family.?game/.test(text)) return 'Board Games';
-    if (/\bpuzzle|jigsaw|rubik|brain.?teas/.test(text)) return 'Puzzles';
+    if (/\bpuzzle|jigsaw|rubik|brain.?teas|cribbage/.test(text)) return 'Board Games';
     if (/\btoy|building.?block|play.?set|remote.?control|rc\s|soft.?toy|teddy|stuffed|plush|play.?doh|craft|slime|nerf/.test(text)) return 'Action Toys';
     // Books
     if (/\bfiction|novel|story|thriller|mystery|romance|adventure|fantasy|horror/.test(text)) return 'Fiction';
@@ -394,6 +398,7 @@ function detectSubcategory(name, cat) {
     if (/\beducat|textbook|exam|ncert|upsc|ssc|study|guide|grammar|math|class\s?\d/.test(text)) return 'Educational';
     if (/\bcookbook|recipe/.test(text)) return 'Non-Fiction';
     if (/\bplanner|journal|diary|notebook/.test(text)) return 'Self-Help';
+    if (/\bfigure|character|creature|bull|moose/.test(text)) return 'Action Toys';
     return 'Non-Fiction'; // fallback
   }
 
@@ -582,6 +587,29 @@ async function repairSubcategories() {
 
               if (!name || !cat) continue;
               checked++;
+
+              // Deactivate overpriced legacy items (over ₹10,000)
+              const price = parseInt(fields.price?.integerValue || '0');
+              if (price > 10000) {
+                const rp = doc.name.split('/documents/')[1];
+                if (rp) {
+                  const bd = JSON.stringify({ fields: { active: { booleanValue: false } } });
+                  await new Promise((res2) => {
+                    const opts = {
+                      hostname: 'firestore.googleapis.com',
+                      path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${rp}?updateMask.fieldPaths=active`,
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bd) }
+                    };
+                    const rq = https.request(opts, (r) => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>res2(true)); });
+                    rq.on('error', () => res2(false));
+                    rq.write(bd); rq.end();
+                  });
+                  repaired++;
+                  console.log(`   💀 Deactivated overpriced: ${name.substring(0, 45)}... (₹${price})`);
+                }
+                continue;
+              }
 
               const newSubcat = detectSubcategory(name, cat);
               if (newSubcat && newSubcat !== oldSubcat) {
