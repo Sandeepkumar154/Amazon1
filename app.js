@@ -29,33 +29,33 @@ db.enablePersistence().catch(() => {});
    CONSTANTS & STATE
 ═══════════════════════════════════ */
 const NICHES = {
-  beauty:      { emoji:'💄', label:'Beauty',                color:'#9d174d', bg:'#fce7f3' },
-  fashion:     { emoji:'👗', label:'Fashion',               color:'#1e40af', bg:'#dbeafe' },
-  home:        { emoji:'🏠', label:'Home & Living',          color:'#065f46', bg:'#d1fae5' },
-  electronics: { emoji:'📱', label:'Electronics',            color:'#92400e', bg:'#fef3c7' },
-  books:       { emoji:'📚', label:'Books & Toys',           color:'#4c1d95', bg:'#ede9fe' },
-  personal:    { emoji:'💊', label:'Personal Care',          color:'#164e63', bg:'#cffafe' },
-  baby:        { emoji:'👶', label:'Baby Products',          color:'#9a3412', bg:'#ffedd5' },
-  pets:        { emoji:'🐶', label:'Pet Supplies',           color:'#134e4a', bg:'#ccfbf1' },
-  sports:      { emoji:'🏏', label:'Sports & Fitness',       color:'#b91c1c', bg:'#fee2e2' },
-  grocery:     { emoji:'🛒', label:'Groceries & Gourmet',    color:'#a16207', bg:'#fef9c3' },
-  auto:        { emoji:'🚗', label:'Automotive',             color:'#475569', bg:'#e2e8f0' },
-  office:      { emoji:'🖊️', label:'Office & Stationery',    color:'#6d28d9', bg:'#f5f3ff' }
+  beauty:      { emoji:'💄', label:'Beauty',                      color:'#9d174d', bg:'#fce7f3' },
+  fashion:     { emoji:'👗', label:'Fashion',                     color:'#1e40af', bg:'#dbeafe' },
+  home:        { emoji:'🏠', label:'Home & Kitchen',              color:'#065f46', bg:'#d1fae5' },
+  electronics: { emoji:'📱', label:'Electronics',                  color:'#92400e', bg:'#fef3c7' },
+  books:       { emoji:'📚', label:'Books',                        color:'#4c1d95', bg:'#ede9fe' },
+  personal:    { emoji:'💊', label:'Health & Personal Care',       color:'#164e63', bg:'#cffafe' },
+  baby:        { emoji:'👶', label:'Baby',                         color:'#9a3412', bg:'#ffedd5' },
+  pets:        { emoji:'🐶', label:'Pet Supplies',                 color:'#134e4a', bg:'#ccfbf1' },
+  sports:      { emoji:'🏏', label:'Sports, Fitness & Outdoors',   color:'#b91c1c', bg:'#fee2e2' },
+  grocery:     { emoji:'🛒', label:'Grocery & Gourmet Foods',      color:'#a16207', bg:'#fef9c3' },
+  auto:        { emoji:'🚗', label:'Car & Motorbike',              color:'#475569', bg:'#e2e8f0' },
+  office:      { emoji:'🖊️', label:'Office Products',              color:'#6d28d9', bg:'#f5f3ff' }
 };
 
 const SUBCATEGORIES = {
-  beauty:      ["Women's Skincare", "Men's Skincare", 'Makeup', "Women's Haircare", "Men's Haircare", "Women's Fragrance", "Men's Fragrance", 'Nails', 'Tools & Brushes'],
-  fashion:     ["Men's Footwear", "Women's Footwear", "Men's Western Wear", "Women's Western Wear", "Men's Ethnic Wear", "Women's Ethnic Wear", "Men's Sportswear", "Women's Sportswear", 'Accessories', 'Kids Wear'],
-  home:        ['Cookware', 'Kitchen Appliances', 'Home Decor', 'Furniture', 'Storage & Organization', 'Bedding & Linen', 'Cleaning Supplies', 'Lighting', 'Garden & Outdoor'],
-  electronics: ['Smartphones', 'Laptops & Computers', 'Wired Headphones', 'Wireless Headphones', 'Smartwatches', 'Bluetooth Speakers', 'Cameras', 'Chargers & Cables', 'Power Banks', 'Smart Home'],
-  books:       ['Fiction', 'Non-Fiction', 'Self-Help', 'Educational', 'Kids Books', 'Action Toys', 'Board Games', 'Puzzles'],
-  personal:    ["Men's Grooming", "Women's Hygiene", 'Oral Care', "Women's Hair Care", "Men's Hair Care", 'Body Care', 'Health & Wellness'],
-  baby:        ['Baby Boy Clothing', 'Baby Girl Clothing', 'Feeding Essentials', 'Diapers & Wipes', 'Baby Toys', 'Bath & Skin Care', 'Gear & Safety'],
-  pets:        ['Dog Food', 'Dog Accessories', 'Cat Food', 'Cat Accessories', 'Fish & Aquarium', 'Bird Supplies', 'Pet Grooming'],
-  sports:      ['Cricket', 'Football', 'Badminton', 'Gym Equipment', 'Yoga & Meditation', 'Running & Walking', 'Cycling', 'Swimming', 'Sports Nutrition'],
-  grocery:     ['Snacks & Biscuits', 'Beverages', 'Cooking Essentials', 'Dry Fruits & Nuts', 'Health Foods', 'Spices & Masala', 'Chocolates & Sweets', 'Organic & Natural'],
-  auto:        ['Car Accessories', 'Bike Accessories', 'Car Electronics', 'Helmet & Safety', 'Car Care', 'Tools & Equipment'],
-  office:      ['Pens & Writing', 'Notebooks & Diaries', 'Desk Organizers', 'Printers & Ink', 'School Supplies', 'Art Supplies']
+  beauty:      ['Skin Care', 'Hair Care', 'Make-up', 'Fragrance', 'Nails', 'Beauty Tools', 'Bath & Body', 'Men\'s Grooming'],
+  fashion:     ['Men\'s Clothing', 'Women\'s Clothing', 'Men\'s Footwear', 'Women\'s Footwear', 'Men\'s Ethnic Wear', 'Women\'s Ethnic Wear', 'Kids\' Fashion', 'Watches & Accessories', 'Handbags & Clutches', 'Sportswear'],
+  home:        ['Kitchen & Dining', 'Home Decor', 'Furniture', 'Garden & Outdoors', 'Bedding & Linen', 'Storage & Organisation', 'Cleaning Supplies', 'Lighting', 'Kitchen Appliances'],
+  electronics: ['Mobiles & Accessories', 'Laptops & Computers', 'Headphones & Earphones', 'Speakers', 'Smart Watches', 'Cameras', 'Chargers & Cables', 'Power Banks', 'Smart Home', 'Tablets'],
+  books:       ['Fiction', 'Non-Fiction', 'Self-Help', 'Academic & Professional', 'Children\'s Books', 'Action Figures & Toys', 'Board Games', 'Puzzles'],
+  personal:    ['Men\'s Grooming', 'Women\'s Hygiene', 'Oral Care', 'Hair Care', 'Body Care', 'Health & Nutrition', 'Vitamins & Supplements'],
+  baby:        ['Baby Clothing', 'Feeding & Nursing', 'Diapering', 'Baby Toys', 'Baby Care', 'Strollers & Prams', 'Baby Safety'],
+  pets:        ['Dogs', 'Cats', 'Fish & Aquatics', 'Birds', 'Small Animals', 'Pet Grooming'],
+  sports:      ['Cricket', 'Football', 'Badminton & Tennis', 'Gym & Fitness', 'Yoga', 'Running & Walking', 'Cycling', 'Swimming', 'Sports Nutrition'],
+  grocery:     ['Snacks & Beverages', 'Cooking Essentials', 'Dry Fruits & Nuts', 'Spices & Masala', 'Health & Organic Foods', 'Dairy & Chocolates', 'Tea, Coffee & Drinks'],
+  auto:        ['Car Accessories', 'Motorbike Accessories', 'Car Electronics', 'Helmets & Gloves', 'Car Care', 'Tools & Auto Parts'],
+  office:      ['Pens & Writing', 'Notebooks & Notepads', 'Desk Accessories', 'Printers & Ink', 'School Supplies', 'Art & Craft Supplies']
 };
 
 let productsCache = [];

@@ -315,200 +315,183 @@ function detectSubcategory(name, cat) {
   const text = name.toLowerCase();
 
   // ── FASHION ──
-  // Subcats: Men's/Women's Footwear, Western Wear, Ethnic Wear, Sportswear, Accessories, Kids Wear
   if (cat === 'fashion') {
     let gender = '';
     if (/\bkids|children|infant|school/.test(text)) gender = 'Kids';
     else if (text.includes('unisex')) gender = 'Unisex';
-    // IMPORTANT: Check women BEFORE men — 'women' contains 'men'!
     else if (/\bwomen|ladies|\bgirl\b|female/.test(text)) gender = "Women's";
     else if (/\bmen('s|\s|$)|\bboy\b/.test(text) || text.includes('male')) gender = "Men's";
 
-    // Skip non-fashion items that sometimes appear in fashion searches
-    if (/\bpencil.?case|stationery|pen.?stand|eraser|ruler\b/.test(text)) return 'Accessories';
+    if (/\bpencil.?case|stationery|pen.?stand|eraser|ruler\b/.test(text)) return 'Watches & Accessories';
 
     let type = '';
     if (/\b(shoe|sneaker|sandal|slipper|boot|heel|loafer|floater|flip.?flop|croc|moccasin)\b/.test(text)) type = 'Footwear';
     else if (/\b(kurta|saree|lehenga|ethnic|sherwani|salwar|dupatta|anarkali|dhoti|lungi|churidar)\b/.test(text)) type = 'Ethnic Wear';
-    else if (/\b(jeans|denim|shirt|t-?shirt|tshirt|jacket|dress|top|shorts|hoodie|blazer|trouser|pant|skirt|sweater|cardigan|coat|pullover|polo)\b/.test(text)) type = 'Western Wear';
-    else if (/\b(sport|gym|track|yoga|running|athletic|workout|fitness|jogger)\b/.test(text)) type = 'Sportswear';
-    else if (/\b(watch|bag|wallet|belt|cap|hat|scarf|stole|ring|bracelet|earring|necklace|sunglass|backpack|purse|clutch|case)\b/.test(text)) type = 'Accessories';
+    else if (/\b(jeans|denim|shirt|t-?shirt|tshirt|jacket|dress|top|shorts|hoodie|blazer|trouser|pant|skirt|sweater|cardigan|coat|pullover|polo)\b/.test(text)) type = 'Clothing';
+    else if (/\b(sport|gym|track|yoga|running|athletic|workout|fitness|jogger)\b/.test(text)) return 'Sportswear';
+    else if (/\b(watch|belt|cap|hat|scarf|stole|ring|bracelet|earring|necklace|sunglass|wallet|case)\b/.test(text)) return 'Watches & Accessories';
+    else if (/\b(bag|wallet|backpack|purse|clutch|handbag|tote|sling)\b/.test(text)) return 'Handbags & Clutches';
 
-    if (gender === 'Kids') return 'Kids Wear';
+    if (gender === 'Kids') return "Kids' Fashion";
     if (gender && type) return gender + ' ' + type;
     if (type) return (gender || "Men's") + ' ' + type;
-    if (gender) return gender + ' Western Wear';
-    return "Men's Western Wear"; // fallback
+    if (gender) return gender + ' Clothing';
+    return "Men's Clothing"; // fallback
   }
 
   // ── BEAUTY ──
-  // Subcats: Women's/Men's Skincare, Haircare, Fragrance, Makeup, Nails, Tools & Brushes
   if (cat === 'beauty') {
-    let g = /\bmen('s|\s|$)|\bmale|\bbeard/.test(text) ? "Men's" : "Women's";
-    if (/\bserum|moisturiz|sunscreen|face wash|face cream|lotion|cleanser|toner|spf|uv\b/.test(text)) return g + ' Skincare';
-    if (/\bshampoo|conditioner|hair oil|hair mask|anti.?frizz|hair growth|hair fall|scalp/.test(text)) return g + ' Haircare';
-    if (/\bperfume|fragrance|deodorant|body mist|cologne|attar|eau de/.test(text)) return g + ' Fragrance';
-    if (/\blipstick|foundation|mascara|kajal|eyeliner|concealer|makeup|blush|primer|compact|eye.?shadow/.test(text)) return 'Makeup';
+    if (/\bmen('s|\s|$)|\bmale|\bbeard/.test(text)) return "Men's Grooming";
+    if (/\bserum|moisturiz|sunscreen|face wash|face cream|lotion|cleanser|toner|spf|uv\b/.test(text)) return 'Skin Care';
+    if (/\bshampoo|conditioner|hair oil|hair mask|anti.?frizz|hair growth|hair fall|scalp/.test(text)) return 'Hair Care';
+    if (/\bperfume|fragrance|deodorant|body mist|cologne|attar|eau de/.test(text)) return 'Fragrance';
+    if (/\blipstick|foundation|mascara|kajal|eyeliner|concealer|makeup|blush|primer|compact|eye.?shadow/.test(text)) return 'Make-up';
     if (/\bnail|manicure|pedicure/.test(text)) return 'Nails';
-    if (/\bbrush|sponge|tool|applicator|curler|straighten|dryer|iron/.test(text)) return 'Tools & Brushes';
-    if (/\bessential.?oil|aroma/.test(text)) return "Women's Skincare";
-    return g + ' Skincare'; // fallback
+    if (/\bbrush|sponge|tool|applicator|curler|straighten|dryer|iron/.test(text)) return 'Beauty Tools';
+    if (/\bbody.?wash|shower|bath|soap|body.?lotion|body.?cream|scrub/.test(text)) return 'Bath & Body';
+    return 'Skin Care'; // fallback
   }
 
-  // ── HOME & LIVING ──
-  // Subcats: Cookware, Kitchen Appliances, Home Decor, Furniture, Storage & Organization, Bedding & Linen, Cleaning, Lighting, Garden & Outdoor
+  // ── HOME & KITCHEN ──
   if (cat === 'home') {
-    if (/\bpan|kadai|tawa|cookware|cooker|pot|wok|skillet|saucepan|frying/.test(text)) return 'Cookware';
+    if (/\bpan|kadai|tawa|cookware|cooker|pot|wok|skillet|saucepan|frying/.test(text)) return 'Kitchen & Dining';
     if (/\bmixer|grinder|blender|toaster|kettle|oven|microwave|induction|juicer|chopper|food processor|rice cooker|air fryer/.test(text)) return 'Kitchen Appliances';
     if (/\bdecor|wall.?art|painting|showpiece|vase|clock|frame|idol|statue|candle|artificial.?flower/.test(text)) return 'Home Decor';
     if (/\bbedsheet|pillow|curtain|blanket|comforter|mattress|duvet|towel|linen|quilt/.test(text)) return 'Bedding & Linen';
     if (/\bvacuum|mop|broom|cleaning|wiper|duster|scrub|detergent/.test(text)) return 'Cleaning Supplies';
     if (/\blamp|light|led|bulb|chandelier|fairy.?light|torch|lantern|strip.?light/.test(text)) return 'Lighting';
     if (/\btable|chair|shelf|desk|sofa|cabinet|rack|stand|stool|bookcase|wardrobe/.test(text)) return 'Furniture';
-    if (/\bstorage|organiz|box|basket|container|bin|drawer|hook|hanger/.test(text)) return 'Storage & Organization';
-    if (/\bgarden|plant|planter|lawn|outdoor|sprinkler|hose|pot|seed|compost/.test(text)) return 'Garden & Outdoor';
-    if (/\bmug|cup|bottle|flask|tumbler|plate|bowl|spoon|fork|knife|tray|cutting.?board|lunch.?box/.test(text)) return 'Cookware';
+    if (/\bstorage|organiz|box|basket|container|bin|drawer|hook|hanger/.test(text)) return 'Storage & Organisation';
+    if (/\bgarden|plant|planter|lawn|outdoor|sprinkler|hose|pot|seed|compost/.test(text)) return 'Garden & Outdoors';
+    if (/\bmug|cup|bottle|flask|tumbler|plate|bowl|spoon|fork|knife|tray|cutting.?board|lunch.?box/.test(text)) return 'Kitchen & Dining';
     return 'Home Decor'; // fallback
   }
 
   // ── ELECTRONICS ──
-  // Subcats: Smartphones, Laptops & Computers, Wired/Wireless Headphones, Smartwatches, Bluetooth Speakers, Cameras, Chargers & Cables, Power Banks, Smart Home
   if (cat === 'electronics') {
-    // Check specific device types FIRST to avoid false matches
-    if (/\bsmartwatch|smart.?watch|fitness.?band|fitness.?track/.test(text)) return 'Smartwatches';
+    if (/\bsmartwatch|smart.?watch|fitness.?band|fitness.?track/.test(text)) return 'Smart Watches';
     if (/\bpower.?bank|portable.?charger/.test(text)) return 'Power Banks';
     if (/\blaptop|computer|desktop|monitor|keyboard|mouse|touchpad|notebook|chromebook|macbook/.test(text)) return 'Laptops & Computers';
-    if (/\btablet|ipad|kindle|e-?reader/.test(text)) return 'Laptops & Computers';
-    if (/\bphone|mobile|smartphone|iphone|samsung|redmi|realme|oneplus|poco|vivo|oppo/.test(text)) return 'Smartphones';
+    if (/\btablet|ipad|kindle|e-?reader/.test(text)) return 'Tablets';
+    if (/\bphone|mobile|smartphone|iphone|samsung|redmi|realme|oneplus|poco|vivo|oppo/.test(text)) return 'Mobiles & Accessories';
     if (/\bcamera|gopro|webcam|dslr|tripod|ring.?light|gimbal|drone/.test(text)) return 'Cameras';
     if (/\balexa|echo|smart.?plug|smart.?bulb|smart.?home|google.?home|smart.?switch|wifi.?cam|security.?cam/.test(text)) return 'Smart Home';
     if (/\brouter|wifi|modem|extender|mesh/.test(text)) return 'Smart Home';
-    if (/\bspeaker|soundbar|subwoofer|boombox/.test(text)) return 'Bluetooth Speakers';
-    // Audio — check AFTER devices so mouse/keyboard/tablet don't match 'wireless'
-    if (/\bearbuds|\bearphones|\bheadphones|\btws|\bneckband|\bairpod|\bbuds\b|noise.?cancell/.test(text)) {
-      return /\bwired\b/.test(text) && !/wireless|bluetooth/.test(text) ? 'Wired Headphones' : 'Wireless Headphones';
-    }
+    if (/\bspeaker|soundbar|subwoofer|boombox/.test(text)) return 'Speakers';
+    if (/\bearbuds|\bearphones|\bheadphones|\btws|\bneckband|\bairpod|\bbuds\b|noise.?cancell/.test(text)) return 'Headphones & Earphones';
     if (/\bcharger|cable|adapter|usb|type.?c|lightning|dock|hub/.test(text)) return 'Chargers & Cables';
-    return 'Chargers & Cables'; // fallback
+    return 'Mobiles & Accessories'; // fallback
   }
 
-  // ── BOOKS & TOYS ──
-  // Subcats: Fiction, Non-Fiction, Self-Help, Educational, Kids Books, Action Toys, Board Games, Puzzles
+  // ── BOOKS ──
   if (cat === 'books') {
-    // Toys & Collectibles first (since they search under 'books' category)
-    if (/\baction.?figure|figurine|doll|toy.?car|robot|superhero|marvel|dc.?comics|star.?wars|transformer|lego|nerf|hot.?wheel/.test(text)) return 'Action Toys';
-    if (/\bfunko|pop!|vinyl.?figure|collectible.?figure|bobble.?head|schleich|bendable.?figure/.test(text)) return 'Action Toys';
+    if (/\baction.?figure|figurine|doll|toy.?car|robot|superhero|marvel|dc.?comics|star.?wars|transformer|lego|nerf|hot.?wheel/.test(text)) return 'Action Figures & Toys';
+    if (/\bfunko|pop!|vinyl.?figure|collectible.?figure|bobble.?head|schleich|bendable.?figure/.test(text)) return 'Action Figures & Toys';
     if (/\bboard.?game|monopoly|chess|card.?game|scrabble|uno|ludo|carrom|catan|family.?game/.test(text)) return 'Board Games';
-    if (/\bpuzzle|jigsaw|rubik|brain.?teas|cribbage/.test(text)) return 'Board Games';
-    if (/\btoy|building.?block|play.?set|remote.?control|rc\s|soft.?toy|teddy|stuffed|plush|play.?doh|craft|slime|nerf/.test(text)) return 'Action Toys';
-    // Books
+    if (/\bpuzzle|jigsaw|rubik|brain.?teas|cribbage/.test(text)) return 'Puzzles';
+    if (/\btoy|building.?block|play.?set|remote.?control|rc\s|soft.?toy|teddy|stuffed|plush|play.?doh|craft|slime|nerf/.test(text)) return 'Action Figures & Toys';
     if (/\bfiction|novel|story|thriller|mystery|romance|adventure|fantasy|horror/.test(text)) return 'Fiction';
     if (/\bself.?help|motivat|habit|mindset|atomic|success|leadership|productiv|goal/.test(text)) return 'Self-Help';
     if (/\bbiograph|histor|non.?fiction|memoir|autobiograph|politic|science|philosophy/.test(text)) return 'Non-Fiction';
-    if (/\bkid|children|coloring|colour|nursery|bedtime|fairy|rhyme|baby.?book|picture.?book/.test(text)) return 'Kids Books';
-    if (/\beducat|textbook|exam|ncert|upsc|ssc|study|guide|grammar|math|class\s?\d/.test(text)) return 'Educational';
+    if (/\bkid|children|coloring|colour|nursery|bedtime|fairy|rhyme|baby.?book|picture.?book/.test(text)) return "Children's Books";
+    if (/\beducat|textbook|exam|ncert|upsc|ssc|study|guide|grammar|math|class\s?\d/.test(text)) return 'Academic & Professional';
     if (/\bcookbook|recipe/.test(text)) return 'Non-Fiction';
     if (/\bplanner|journal|diary|notebook/.test(text)) return 'Self-Help';
-    if (/\bfigure|character|creature|bull|moose/.test(text)) return 'Action Toys';
+    if (/\bfigure|character|creature|bull|moose/.test(text)) return 'Action Figures & Toys';
     return 'Non-Fiction'; // fallback
   }
 
-  // ── PERSONAL CARE ──
-  // Subcats: Men's Grooming, Women's Hygiene, Oral Care, Women's/Men's Hair Care, Body Care, Health & Wellness
+  // ── HEALTH & PERSONAL CARE ──
   if (cat === 'personal') {
     if (/\btrimmer|razor|shaving|beard|after.?shave|grooming.?kit/.test(text)) return "Men's Grooming";
-    if (/\bshampoo|conditioner|hair.?oil|hair.?mask|anti.?dandruff|hair.?fall|scalp/.test(text)) {
-      return (/\bmen|male|beard/.test(text) ? "Men's" : "Women's") + ' Hair Care';
-    }
+    if (/\bshampoo|conditioner|hair.?oil|hair.?mask|anti.?dandruff|hair.?fall|scalp/.test(text)) return 'Hair Care';
     if (/\btoothpaste|toothbrush|oral|mouthwash|floss|dental|tongue.?clean/.test(text)) return 'Oral Care';
     if (/\bbody.?wash|shower.?gel|soap|lotion|body.?cream|moisturiz|scrub|body.?oil/.test(text)) return 'Body Care';
     if (/\bpad|tampon|hygiene|intimate.?wash|menstrual|feminine/.test(text)) return "Women's Hygiene";
-    if (/\bvitamin|supplement|protein|health|wellness|omega|calcium|iron|biotin|collagen|probiotic|immunity|ayurved|weight.?loss|weight.?gain|whey|bcaa|creatine/.test(text)) return 'Health & Wellness';
-    if (/\byoga|gym|fitness|exercise|workout|mat|skipping|dumbbell|resistance|massage/.test(text)) return 'Health & Wellness';
+    if (/\bvitamin|supplement|omega|calcium|iron|biotin|collagen|probiotic|immunity|ayurved|multivitamin/.test(text)) return 'Vitamins & Supplements';
+    if (/\bprotein|health|wellness|weight.?loss|weight.?gain|whey|bcaa|creatine|nutrition/.test(text)) return 'Health & Nutrition';
+    if (/\byoga|gym|fitness|exercise|workout|mat|skipping|dumbbell|resistance|massage/.test(text)) return 'Health & Nutrition';
     if (/\bface.?razor|epilator|wax/.test(text)) return "Women's Hygiene";
     return 'Body Care'; // fallback
   }
 
-  // ── BABY PRODUCTS ──
-  // Subcats: Baby Boy Clothing, Baby Girl Clothing, Feeding Essentials, Diapers & Wipes, Baby Toys, Bath & Skin Care, Gear & Safety
+  // ── BABY ──
   if (cat === 'baby') {
-    if (/\bboy.?(cloth|dress|outfit|romper|set)|boy.?t-?shirt/.test(text)) return 'Baby Boy Clothing';
-    if (/\bgirl.?(cloth|dress|outfit|romper|frock)|girl.?t-?shirt/.test(text)) return 'Baby Girl Clothing';
-    if (/\bdiaper|wipe|nappy|pull.?up/.test(text)) return 'Diapers & Wipes';
+    if (/\bdiaper|wipe|nappy|pull.?up/.test(text)) return 'Diapering';
     if (/\btoy|rattle|teether|play|musical|learning/.test(text)) return 'Baby Toys';
-    if (/\bbottle|feed|sippy|cup|nipple|formula|cereal|food|bib/.test(text)) return 'Feeding Essentials';
-    if (/\bbath|soap|lotion|oil|cream|powder|skin|body.?wash|shampoo/.test(text)) return 'Bath & Skin Care';
-    if (/\bstroller|carrier|car.?seat|walker|bouncer|swing|crib|cradle|gate|monitor|swaddle|blanket|mosquito|mat/.test(text)) return 'Gear & Safety';
-    if (/\bcloth|romper|onesie|set|bodysuit|outfit/.test(text)) return 'Baby Boy Clothing';
-    return 'Gear & Safety'; // fallback
+    if (/\bbottle|feed|sippy|cup|nipple|formula|cereal|food|bib|nursing/.test(text)) return 'Feeding & Nursing';
+    if (/\bbath|soap|lotion|oil|cream|powder|skin|body.?wash|shampoo/.test(text)) return 'Baby Care';
+    if (/\bstroller|pram|carrier|car.?seat|walker|bouncer|swing|crib|cradle|gate|monitor/.test(text)) return 'Strollers & Prams';
+    if (/\bsafety|swaddle|blanket|mosquito|mat|guard|lock|cover/.test(text)) return 'Baby Safety';
+    if (/\bcloth|romper|onesie|set|bodysuit|outfit|dress|boy|girl/.test(text)) return 'Baby Clothing';
+    return 'Baby Care'; // fallback
   }
 
   // ── PET SUPPLIES ──
-  // Subcats: Dog Food/Accessories, Cat Food/Accessories, Fish & Aquarium, Bird Supplies, Pet Grooming
   if (cat === 'pets') {
-    if (/\bdog/.test(text)) return /\bfood|treat|biscuit|kibble|chew.?stick/.test(text) ? 'Dog Food' : 'Dog Accessories';
-    if (/\bcat|kitten/.test(text)) return /\bfood|treat|kibble/.test(text) ? 'Cat Food' : 'Cat Accessories';
-    if (/\bfish|aquarium|tank|filter|pump|gravel|substrate/.test(text)) return 'Fish & Aquarium';
-    if (/\bbird|parrot|cage|perch|finch|budgie/.test(text)) return 'Bird Supplies';
+    if (/\bdog/.test(text)) return 'Dogs';
+    if (/\bcat|kitten/.test(text)) return 'Cats';
+    if (/\bfish|aquarium|tank|filter|pump|gravel|substrate/.test(text)) return 'Fish & Aquatics';
+    if (/\bbird|parrot|cage|perch|finch|budgie/.test(text)) return 'Birds';
+    if (/\bhamster|rabbit|guinea|ferret|small.?animal/.test(text)) return 'Small Animals';
     if (/\bgroom|brush|shampoo|nail.?clip|comb|dryer/.test(text)) return 'Pet Grooming';
     if (/\bpet/.test(text)) return 'Pet Grooming';
-    return 'Dog Accessories'; // fallback
+    return 'Dogs'; // fallback
   }
 
-  // ── SPORTS & FITNESS ──
+  // ── SPORTS, FITNESS & OUTDOORS ──
   if (cat === 'sports') {
     if (/\bcricket|bat|wicket|stump|pad|guard/.test(text)) return 'Cricket';
     if (/\bfootball|soccer|fifa|goal.?keep/.test(text)) return 'Football';
-    if (/\bbadminton|shuttlecock|racket|racquet/.test(text)) return 'Badminton';
-    if (/\bdumbbell|barbell|bench.?press|weight|kettlebell|pull.?up|push.?up|gym/.test(text)) return 'Gym Equipment';
-    if (/\byoga|meditation|pilates|stretching|foam.?roller/.test(text)) return 'Yoga & Meditation';
+    if (/\bbadminton|shuttlecock|racket|racquet|tennis/.test(text)) return 'Badminton & Tennis';
+    if (/\bdumbbell|barbell|bench.?press|weight|kettlebell|pull.?up|push.?up|gym/.test(text)) return 'Gym & Fitness';
+    if (/\byoga|meditation|pilates|stretching|foam.?roller/.test(text)) return 'Yoga';
     if (/\brunning|jogging|walking|marathon|treadmill/.test(text)) return 'Running & Walking';
-    if (/\bcycl|bike|bicycle|helmet/.test(text)) return 'Cycling';
+    if (/\bcycl|bike|bicycle/.test(text)) return 'Cycling';
     if (/\bswim|pool|goggles|swim.?cap/.test(text)) return 'Swimming';
     if (/\bprotein|bcaa|creatine|pre.?workout|supplement|whey|nutrition/.test(text)) return 'Sports Nutrition';
-    if (/\btable.?tennis|ping.?pong/.test(text)) return 'Badminton';
-    if (/\bbox|punch|glove|martial/.test(text)) return 'Gym Equipment';
-    if (/\bskip|rope|band|resistance|exercise/.test(text)) return 'Gym Equipment';
-    if (/\bsport|athletic|fitness/.test(text)) return 'Gym Equipment';
-    return 'Gym Equipment'; // fallback
+    if (/\btable.?tennis|ping.?pong/.test(text)) return 'Badminton & Tennis';
+    if (/\bbox|punch|glove|martial/.test(text)) return 'Gym & Fitness';
+    if (/\bskip|rope|band|resistance|exercise|helmet/.test(text)) return 'Gym & Fitness';
+    if (/\bsport|athletic|fitness/.test(text)) return 'Gym & Fitness';
+    return 'Gym & Fitness'; // fallback
   }
 
-  // ── GROCERIES & GOURMET ──
+  // ── GROCERY & GOURMET FOODS ──
   if (cat === 'grocery') {
-    if (/\bsnack|biscuit|chip|namkeen|cookie|cracker|munch/.test(text)) return 'Snacks & Biscuits';
-    if (/\btea|coffee|juice|drink|water|beverage|soda|shake/.test(text)) return 'Beverages';
+    if (/\bsnack|biscuit|chip|namkeen|cookie|cracker|munch/.test(text)) return 'Snacks & Beverages';
+    if (/\btea|coffee|juice|drink|water|beverage|soda|shake/.test(text)) return 'Tea, Coffee & Drinks';
     if (/\boil|ghee|atta|flour|rice|dal|salt|sugar|vinegar/.test(text)) return 'Cooking Essentials';
     if (/\bdry.?fruit|almond|cashew|walnut|pistachio|raisin|nut|seed|trail.?mix/.test(text)) return 'Dry Fruits & Nuts';
-    if (/\boat|muesli|granola|protein|health|diet|low.?cal|sugar.?free/.test(text)) return 'Health Foods';
+    if (/\boat|muesli|granola|protein|health|diet|low.?cal|sugar.?free|organic|natural|herbal|ayurved/.test(text)) return 'Health & Organic Foods';
     if (/\bspice|masala|turmeric|cumin|pepper|chilli|cinnamon|cardamom/.test(text)) return 'Spices & Masala';
-    if (/\bchocolate|candy|sweet|mithai|laddu|barfi/.test(text)) return 'Chocolates & Sweets';
-    if (/\borganic|natural|pure|herbal|ayurved/.test(text)) return 'Organic & Natural';
-    if (/\bhoney|jaggery|jam|spread|peanut.?butter/.test(text)) return 'Health Foods';
+    if (/\bchocolate|candy|sweet|mithai|laddu|barfi|dairy|milk|cheese|butter|paneer/.test(text)) return 'Dairy & Chocolates';
+    if (/\bhoney|jaggery|jam|spread|peanut.?butter/.test(text)) return 'Health & Organic Foods';
     return 'Cooking Essentials'; // fallback
   }
 
-  // ── AUTOMOTIVE ──
+  // ── CAR & MOTORBIKE ──
   if (cat === 'auto') {
     if (/\bcar\b.*\b(accessor|cover|seat|cushion|mat|mirror|visor|sunshade|organiz)/.test(text)) return 'Car Accessories';
-    if (/\bbike\b.*\b(accessor|glove|tank|cover|lock|chain|handlebar)/.test(text)) return 'Bike Accessories';
+    if (/\bbike\b.*\b(accessor|glove|tank|cover|lock|chain|handlebar)/.test(text)) return 'Motorbike Accessories';
     if (/\bdash.?cam|gps|charger|bluetooth|music|stereo|speaker|led|light|camera/.test(text)) return 'Car Electronics';
-    if (/\bhelmet|guard|jacket|vest|reflective|safety|knee/.test(text)) return 'Helmet & Safety';
+    if (/\bhelmet|guard|jacket|vest|reflective|safety|knee|glove/.test(text)) return 'Helmets & Gloves';
     if (/\bwash|clean|polish|wax|shampoo|duster|vacuum|microfiber|sponge/.test(text)) return 'Car Care';
-    if (/\btool|jack|wrench|inflat|compressor|pump|repair|kit/.test(text)) return 'Tools & Equipment';
+    if (/\btool|jack|wrench|inflat|compressor|pump|repair|kit|part/.test(text)) return 'Tools & Auto Parts';
     if (/\bcar\b/.test(text)) return 'Car Accessories';
-    if (/\bbike|motorcycle|scooter/.test(text)) return 'Bike Accessories';
+    if (/\bbike|motorcycle|scooter/.test(text)) return 'Motorbike Accessories';
     if (/\bphone.*holder|mobile.*holder|mount/.test(text)) return 'Car Electronics';
     return 'Car Accessories'; // fallback
   }
 
-  // ── OFFICE & STATIONERY ──
+  // ── OFFICE PRODUCTS ──
   if (cat === 'office') {
     if (/\bpen\b|ballpoint|fountain|gel.?pen|roller.?ball|ink.?pen|marker|highlighter/.test(text)) return 'Pens & Writing';
-    if (/\bnotebook|diary|journal|planner|register|ruled|unruled/.test(text)) return 'Notebooks & Diaries';
-    if (/\bdesk|organiz|tray|holder|stand|paper.?weight|table|file|folder/.test(text)) return 'Desk Organizers';
+    if (/\bnotebook|diary|journal|planner|register|ruled|unruled|notepad/.test(text)) return 'Notebooks & Notepads';
+    if (/\bdesk|organiz|tray|holder|stand|paper.?weight|table|file|folder/.test(text)) return 'Desk Accessories';
     if (/\bprinter|cartridge|ink|toner|scanner|paper|a4/.test(text)) return 'Printers & Ink';
     if (/\bschool|bag|backpack|lunch|water.?bottle|compass|geometry|pencil.?box|eraser|ruler|sharpener/.test(text)) return 'School Supplies';
-    if (/\bart|paint|brush|canvas|sketch|drawing|crayon|colour|color|pastel|easel/.test(text)) return 'Art Supplies';
+    if (/\bart|paint|brush|canvas|sketch|drawing|crayon|colour|color|pastel|easel|craft/.test(text)) return 'Art & Craft Supplies';
     if (/\bcalculator|stapler|tape|glue|scissor|cutter|stamp|punch|laminator|whiteboard/.test(text)) return 'School Supplies';
     return 'School Supplies'; // fallback
   }
