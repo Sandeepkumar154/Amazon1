@@ -1,9 +1,9 @@
-name: 🚀 Auto Deal Fetcher (Every 6 Hours)
+name: 🚀 Auto Deal Fetcher (Every 3 Hours)
 
 on:
   schedule:
-    # Runs every 6 hours (4 times/day)
-    - cron: '0 */6 * * *'
+    # Runs every 3 hours (8 times/day) for fresh deals & price checks
+    - cron: '0 */3 * * *'
   # Allows you to click a "Run Workflow" button manually whenever you want!
   workflow_dispatch:
 
