@@ -1,0 +1,37 @@
+name: 🚀 Auto Deal Fetcher (Every 6 Hours)
+
+on:
+  schedule:
+    # Runs every 6 hours (4 times/day)
+    - cron: '0 */6 * * *'
+  # Allows you to click a "Run Workflow" button manually whenever you want!
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: 📦 Install Dependencies
+      run: npm install dotenv
+      
+    - name: 🤖 Run Amazon Auto-Deals Bot
+      run: node auto-deals.js
+      env:
+        # Amazon PA-API (kept for potential fallback)
+        AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
+        AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
+        AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+        # APILayer Advanced Scraper (primary engine)
+        APILAYER_KEY: ${{ secrets.APILAYER_KEY }}
+        # Firebase
+        FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}

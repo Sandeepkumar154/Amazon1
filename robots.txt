@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /install-bookmarklet.html
+
+Sitemap: https://dealkart-india.web.app/sitemap.xml
