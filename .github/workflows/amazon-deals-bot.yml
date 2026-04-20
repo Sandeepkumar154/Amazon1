@@ -2,7 +2,7 @@ name: 🚀 Auto Deal Fetcher (Every 6 Hours)
 
 on:
   schedule:
-    # Runs every 6 hours (4 times/day) to conserve PA-API quota
+    # Runs every 6 hours (4 times/day)
     - cron: '0 */6 * * *'
   # Allows you to click a "Run Workflow" button manually whenever you want!
   workflow_dispatch:
@@ -26,9 +26,12 @@ jobs:
     - name: 🤖 Run Amazon Auto-Deals Bot
       run: node auto-deals.js
       env:
-        # We will securely inject these from GitHub Secrets so nobody sees your passwords
+        # Amazon PA-API (kept for potential fallback)
         AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
         AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
         AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+        # APILayer Advanced Scraper (primary engine)
+        APILAYER_KEY: ${{ secrets.APILAYER_KEY }}
+        # Firebase
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}

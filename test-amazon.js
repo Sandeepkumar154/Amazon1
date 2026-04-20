@@ -53,13 +53,18 @@ function checkPAAPI() {
   console.log(`Tag: ${PARTNER_TAG}\n`);
 
   const body = JSON.stringify({
-    Keywords: 'laptop',
+    Keywords: 'iPhone',
     SearchIndex: 'Electronics',
     PartnerTag: PARTNER_TAG,
     PartnerType: 'Associates',
     Marketplace: 'www.amazon.in',
     ItemCount: 1,
-    Resources: ['ItemInfo.Title', 'Offers.Listings.Price']
+    Resources: [
+      'ItemInfo.Title',
+      'Images.Primary.Large',
+      'Offers.Listings.Price',
+      'Offers.Listings.SavingBasis'
+    ]
   });
 
   const headers = signRequest(body);
@@ -71,16 +76,42 @@ function checkPAAPI() {
     res.on('end', () => {
       console.log(`HTTP Status: ${res.statusCode}`);
       const json = JSON.parse(data);
+      
       if (json.Errors) {
         console.error('❌ API Error:');
         console.log(JSON.stringify(json.Errors, null, 2));
-      } else if (json.SearchResult) {
-        console.log('✅ API is ALIVE and Working!');
-        console.log('Successfully retrieved an item:');
-        console.log(JSON.stringify(json.SearchResult.Items[0], null, 2));
+        return;
+      } 
+      
+      if (json.SearchResult && json.SearchResult.Items && json.SearchResult.Items.length > 0) {
+        const item = json.SearchResult.Items[0];
+        console.log('✅ API Request Success!');
+        console.log('--- Item Check ---');
+        console.log(`Title: ${item.ItemInfo?.Title?.DisplayValue}`);
+        
+        const offers = item.Offers;
+        if (!offers) {
+          console.error('⚠️  Empty "Offers" ❌ (No sales yet OR wrong request)');
+        } else if (!offers.Listings || offers.Listings.length === 0) {
+          console.error('⚠️  Missing "Listings" ❌ (No sales yet OR wrong request)');
+        } else {
+          const price = offers.Listings[0].Price;
+          if (price) {
+            console.log('💰 Price Data Found:');
+            console.log(JSON.stringify(price, null, 2));
+            if (price.Currency !== 'INR') {
+              console.warn(`🚨 Warning: Currency is ${price.Currency}, expected INR.`);
+            }
+          } else {
+            console.error('❌ "Offers.Listings.Price" is missing from the response.');
+          }
+        }
+        
+        console.log('\nFull First Item JSON:');
+        console.log(JSON.stringify(item, null, 2));
       } else {
-        console.log('❓ Unknown response:');
-        console.log(json);
+        console.log('❓ No items found or unexpected response:');
+        console.log(JSON.stringify(json, null, 2));
       }
     });
   });

@@ -67,20 +67,21 @@ function sanitize(s) {
 function sanitizePrice(price, was) {
   let p = Number(price) || 0;
   let w = Number(was) || 0;
-  
+
   // If MRP stored in paisa (e.g. 28500 for ₹285) or absurdly high, normalize
-  // By checking if dividing by 100 still leaves an MRP >= price
   if (p > 0 && w > p * 5 && (w / 100) >= p) {
     w = Math.round(w / 100);
   }
-  
-  // Cap absurd MRPs that still slip through (like if it was actually 20x price for some reason)
+
+  // Cap absurd MRPs that still slip through
   if (p > 0 && w > p * 20) {
     w = Math.round(p * 2);
   }
 
-  // If was <= price, estimate
-  if (w <= p && p > 0) {
+  // BUG FIX: Only estimate MRP if was was actually provided (non-zero).
+  // Do NOT fabricate a fake MRP when was=0 — that creates misleading discounts.
+  // If was is still 0 at this point, leave it as 0 (no discount shown).
+  if (w > 0 && w <= p && p > 0) {
     w = Math.round(p * 1.3);
   }
   return { price: p, was: w };
@@ -189,19 +190,24 @@ function openProduct(id) {
   const p = getProducts().find(x => x.id === id);
   if (!p) return;
   const n = NICHES[p.cat] || { emoji:'⭐', label:p.cat, color:'#6b7280', bg:'#f3f4f6' };
+  // BUG FIX: Use local copies, never mutate productsCache objects
   const sp = sanitizePrice(p.price, p.was);
-  p.price = sp.price; p.was = sp.was;
-  const disc = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
-  const saved = p.was ? p.was - p.price : 0;
+  const price = sp.price; const was = sp.was;
+  const disc = was ? Math.round((1 - price / was) * 100) : 0;
+  const saved = was ? was - price : 0;
   const sn = sanitize(p.name);
+  // BUG FIX: Fallback to images[0] if img field missing (products from auto-deals.js)
+  const allImgs = (p.images && p.images.length) ? p.images : (p.img ? [p.img] : []);
   const sl = sanitize(p.link);
-  const allImgs = (p.images && p.images.length) ? p.images : [p.img];
 
   // Store images globally for slider navigation
   window._galleryImages = allImgs;
   window._galleryIndex = 0;
 
   document.getElementById('detailNavTitle').textContent = p.name;
+  if (!allImgs.length) allImgs.push('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600');
+  // BUG FIX: Store link on window to avoid single-quote XSS in onclick attribute interpolation
+  window._currentProductLink = p.link;
   document.getElementById('detailBody').innerHTML = `
     <div class="detail-gallery">
       <div class="detail-img-box">
@@ -230,13 +236,13 @@ function openProduct(id) {
       </div>
       <div class="detail-price-box">
         <div class="detail-price-row">
-          <span class="detail-price-now">₹${p.price.toLocaleString('en-IN')}</span>
-          ${p.was ? `<span class="detail-price-was">₹${p.was.toLocaleString('en-IN')}</span>` : ''}
+          <span class="detail-price-now">₹${price.toLocaleString('en-IN')}</span>
+          ${was ? `<span class="detail-price-was">₹${was.toLocaleString('en-IN')}</span>` : ''}
           ${disc > 0 ? `<span class="detail-price-off">${disc}% off</span>` : ''}
         </div>
         ${saved > 0 ? `<div class="detail-savings"><i class="fas fa-tag" style="margin-right:4px;"></i>You save ₹${saved.toLocaleString('en-IN')} on this deal!</div>` : ''}
       </div>
-      <a href="${sl}" target="_blank" rel="noopener" onclick="return checkLink('${sl}')">
+      <a href="${sl}" target="_blank" rel="noopener" onclick="return checkCurrentLink()">
         <button class="detail-buy-btn"><i class="fab fa-amazon"></i> Buy on Amazon India</button>
       </a>
       <hr class="detail-divider">
@@ -261,20 +267,24 @@ function openProduct(id) {
 
 function miniCard(p) {
   const n = NICHES[p.cat] || { emoji:'⭐', label:p.cat, color:'#6b7280', bg:'#f3f4f6' };
-  const sp = sanitizePrice(p.price, p.was); p.price = sp.price; p.was = sp.was;
-  const disc = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
+  // BUG FIX: Use local copies, never mutate productsCache objects
+  const sp = sanitizePrice(p.price, p.was);
+  const price = sp.price; const was = sp.was;
+  const disc = was ? Math.round((1 - price / was) * 100) : 0;
   const sn = sanitize(p.name);
+  // BUG FIX: Fallback to images[0] if img field missing
+  const imgSrc = sanitize(p.img || (p.images && p.images[0]) || '');
   return `<div class="product-card" onclick="openProduct('${p.id}')">
     <div class="card-img-wrap">
-      <img src="${sanitize(p.img)}" alt="${sn}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'">
+      <img src="${imgSrc}" alt="${sn}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'">
       <span class="card-badge">${p.rating.toFixed(1)}★</span>
       ${disc > 0 ? `<span class="card-badge sale">−${disc}%</span>` : ''}
     </div>
     <div class="card-body">
       <div class="card-name">${sn}</div>
       <div class="card-price">
-        <span class="price-now">₹${p.price.toLocaleString('en-IN')}</span>
-        ${p.was ? `<span class="price-was">₹${p.was.toLocaleString('en-IN')}</span>` : ''}
+        <span class="price-now">₹${price.toLocaleString('en-IN')}</span>
+        ${was ? `<span class="price-was">₹${was.toLocaleString('en-IN')}</span>` : ''}
       </div>
       <button class="card-btn"><i class="fas fa-eye" style="font-size:10px;"></i> View Deal</button>
     </div>
@@ -284,6 +294,11 @@ function miniCard(p) {
 function checkLink(href) {
   if (!href || href === '#') { showToast('No Amazon link set yet.'); return false; }
   return true;
+}
+
+// BUG FIX: Safe version that reads link from window variable (avoids XSS via inline string interpolation)
+function checkCurrentLink() {
+  return checkLink(window._currentProductLink || '');
 }
 
 function switchGalleryImg(thumb, src) {
@@ -320,19 +335,22 @@ function galleryGoTo(idx) {
 ═══════════════════════════════════ */
 function renderTop4() {
   const prods = getProducts().filter(p => p.active && p.rating >= 4);
+  // BUG FIX: Use spread copies instead of mutating productsCache objects
   const scored = prods.map(p => {
-    const sp = sanitizePrice(p.price, p.was); p.price = sp.price; p.was = sp.was;
-    const disc = p.was ? (1 - p.price / p.was) * 100 : 0;
-    return { ...p, score: (p.rating * 15) + (disc * 0.8) + Math.min((p.reviews||0) / 1000, 20) };
+    const sp = sanitizePrice(p.price, p.was);
+    const price = sp.price; const was = sp.was;
+    const disc = was ? (1 - price / was) * 100 : 0;
+    return { ...p, price, was, score: (p.rating * 15) + (disc * 0.8) + Math.min((p.reviews||0) / 1000, 20) };
   }).sort((a, b) => b.score - a.score).slice(0, 4);
 
   document.getElementById('top4Grid').innerHTML = scored.map(p => {
     const n = NICHES[p.cat] || { emoji:'⭐', label:p.cat, color:'#6b7280', bg:'#f3f4f6' };
     const disc = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
     const sn = sanitize(p.name);
+    const imgSrc = sanitize(p.img || (p.images && p.images[0]) || '');
     return `<div class="top4-card" onclick="openProduct('${p.id}')">
       <div class="top4-img">
-        <img src="${sanitize(p.img)}" alt="${sn}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'">
+        <img src="${imgSrc}" alt="${sn}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'">
         <span class="top4-rating-badge">${p.rating.toFixed(1)}★</span>
         ${disc > 0 ? `<span class="top4-off-badge">−${disc}%</span>` : ''}
       </div>
@@ -364,12 +382,18 @@ function renderGrid(prods) {
   }
   document.getElementById('productGrid').innerHTML = active.map(p => {
     const n = NICHES[p.cat] || { emoji:'⭐', label:p.cat, color:'#6b7280', bg:'#f3f4f6' };
-    const sp = sanitizePrice(p.price, p.was); p.price = sp.price; p.was = sp.was;
-    const disc = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
+    // BUG FIX: Use local copies, never mutate productsCache objects
+    const sp = sanitizePrice(p.price, p.was);
+    const price = sp.price; const was = sp.was;
+    const disc = was ? Math.round((1 - price / was) * 100) : 0;
     const sn = sanitize(p.name);
+    // BUG FIX: Fallback to images[0] if img field missing (auto-deals.js products)
+    const imgSrc = sanitize(p.img || (p.images && p.images[0]) || '');
+    // BUG FIX: Use Math.floor for stars so 4.5 shows 4 filled stars (not 5)
+    const starCount = Math.min(5, Math.floor(p.rating));
     return `<div class="product-card" onclick="openProduct('${p.id}')">
       <div class="card-img-wrap">
-        <img src="${sanitize(p.img)}" alt="${sn}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'">
+        <img src="${imgSrc}" alt="${sn}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'">
         <span class="card-badge">${p.rating.toFixed(1)}★</span>
         ${disc > 0 ? `<span class="card-badge sale">−${disc}%</span>` : ''}
       </div>
@@ -378,13 +402,13 @@ function renderGrid(prods) {
         ${p.subcat ? `<div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">› ${sanitize(p.subcat)}</div>` : ''}
         <div class="card-name">${sn}</div>
         <div class="card-rating">
-          <span class="stars">${'★★★★★'.slice(0, Math.round(p.rating))}</span>
+          <span class="stars">${'★★★★★'.slice(0, starCount)}</span>
           <span class="rating-num">${p.rating.toFixed(1)}</span>
           ${p.reviews ? `<span class="rating-count">(${p.reviews.toLocaleString('en-IN')})</span>` : ''}
         </div>
         <div class="card-price">
-          <span class="price-now">₹${p.price.toLocaleString('en-IN')}</span>
-          ${p.was ? `<span class="price-was">₹${p.was.toLocaleString('en-IN')}</span>` : ''}
+          <span class="price-now">₹${price.toLocaleString('en-IN')}</span>
+          ${was ? `<span class="price-was">₹${was.toLocaleString('en-IN')}</span>` : ''}
           ${disc > 0 ? `<span class="price-off">${disc}% off</span>` : ''}
         </div>
         <button class="card-btn"><i class="fas fa-eye" style="font-size:11px;"></i> View Deal</button>
@@ -709,7 +733,8 @@ function editProduct(id) {
         images: getImageUrls()
       });
       showToast('Product updated!');
-      btn.innerHTML = 'Add Product';
+      // BUG FIX: Restore button icon when reverting from Update to Add mode
+      btn.innerHTML = '<i class="fas fa-plus" style="margin-right:5px;"></i>Add Product';
       btn.onclick = addProduct;
       ['pName','pLink','pPrice','pWas','pReviews'].forEach(fid => document.getElementById(fid).value = '');
       setImageUrls([]);
@@ -751,6 +776,14 @@ async function subscribeNewsletter() {
   const e = document.getElementById('nlEmail').value.trim();
   if (!e || !e.includes('@')) { showToast('Enter a valid email.'); return; }
   try {
+    // BUG FIX: Check for duplicate subscription before adding
+    const existing = await db.collection('subscribers')
+      .where('email', '==', e).where('type', '==', 'newsletter').limit(1).get();
+    if (!existing.empty) {
+      document.getElementById('nlEmail').value = '';
+      showToast('Already subscribed! We\'ll keep sending deals.');
+      return;
+    }
     await db.collection('subscribers').add({
       email: e, type: 'newsletter', categories: [],
       subscribedAt: firebase.firestore.FieldValue.serverTimestamp()

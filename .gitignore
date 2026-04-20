@@ -6,3 +6,5 @@ firebase-debug.log
 auto-deals-log.txt
 *.log
 .DS_Store
+# Added by code-review-graph
+.code-review-graph/
