@@ -369,12 +369,23 @@ function detectSubcategory(name, cat) {
 
   // ── ELECTRONICS ──
   if (cat === 'electronics') {
+    // FIRST: Filter out non-electronic accessories (bags, cases, sleeves, covers, pouch, stand, holder)
+    const isAccessory = /\b(bag|sleeve|case|cover|pouch|skin|folio|protector)\b/.test(text);
+    // Car/bike holders should NOT be in electronics
+    if (/\bcar\b.*\b(holder|mount|stand)|\b(holder|mount|stand).*\bcar\b/.test(text)) return 'Mobiles & Accessories';
+    if (/\bbike\b.*\b(holder|mount)|\b(holder|mount).*\bbike\b/.test(text)) return 'Mobiles & Accessories';
+
     if (/\bsmartwatch|smart.?watch|fitness.?band|fitness.?track/.test(text)) return 'Smart Watches';
     if (/\bpower.?bank|portable.?charger/.test(text)) return 'Power Banks';
-    if (/\blaptop|computer|desktop|monitor|keyboard|mouse|touchpad|notebook|chromebook|macbook/.test(text)) return 'Laptops & Computers';
-    if (/\btablet|ipad|kindle|e-?reader/.test(text)) return 'Tablets';
+    if (/\blaptop|computer|desktop|monitor|keyboard|mouse|touchpad|notebook|chromebook|macbook/.test(text)) {
+      return isAccessory ? 'Mobiles & Accessories' : 'Laptops & Computers';
+    }
+    if (/\btablet|ipad|kindle|e-?reader/.test(text)) {
+      return isAccessory ? 'Mobiles & Accessories' : 'Tablets';
+    }
     if (/\bphone|mobile|smartphone|iphone|samsung|redmi|realme|oneplus|poco|vivo|oppo/.test(text)) return 'Mobiles & Accessories';
-    if (/\bcamera|gopro|webcam|dslr|tripod|ring.?light|gimbal|drone/.test(text)) return 'Cameras';
+    if (/\bcamera|gopro|dslr|tripod|ring.?light|gimbal|drone/.test(text)) return 'Cameras';
+    if (/\bwebcam/.test(text)) return 'Cameras';
     if (/\balexa|echo|smart.?plug|smart.?bulb|smart.?home|google.?home|smart.?switch|wifi.?cam|security.?cam/.test(text)) return 'Smart Home';
     if (/\brouter|wifi|modem|extender|mesh/.test(text)) return 'Smart Home';
     if (/\bspeaker|soundbar|subwoofer|boombox/.test(text)) return 'Speakers';
