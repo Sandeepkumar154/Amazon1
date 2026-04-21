@@ -1,7 +1,7 @@
 /*  ═══════════════════════════════════════════════════
     DealKart India — Auto-Deal Finder (Scraper Edition)
-    Uses APILayer Advanced Scraper to get REAL prices
-    from Amazon India — no PA-API Offers restriction!
+    Uses Scrape.do to get REAL prices from Amazon India
+    — no PA-API Offers restriction!
     Run: node auto-deals.js
 ═══════════════════════════════════════════════════ */
 
@@ -10,7 +10,7 @@ const https = require('https');
 
 // ─── CONFIG ───
 const PARTNER_TAG    = process.env.AMAZON_PARTNER_TAG || 'sandeepku0b19-21';
-const SCRAPER_KEY    = process.env.APILAYER_KEY || '4sbXvvRtavRdUqrm93PpnJ4T7qfUSKtB';
+const SCRAPER_TOKEN  = process.env.SCRAPEDO_TOKEN || '63b971431919467c9922b63fb868d335c9336d8c28e';
 const FB_PROJECT     = process.env.FIREBASE_PROJECT_ID;
 
 // Keep PA-API credentials for potential fallback
@@ -62,50 +62,37 @@ const SEARCH_QUERIES = [
 ];
 
 // ═══════════════════════════════════════════════════
-// ─── SCRAPER ENGINE (APILayer Advanced Scraper) ───
+// ─── SCRAPER ENGINE (Scrape.do) ───
 // ═══════════════════════════════════════════════════
 
 function scrapeAmazonSearch(keyword) {
   return new Promise((resolve) => {
     // Amazon India search — sorted by popularity, no price filter (all price ranges)
     const amazonURL = `https://www.amazon.in/s?k=${encodeURIComponent(keyword)}&s=popularity-rank&i=aps`;
-    const params = new URLSearchParams({
-      url: amazonURL,
-      country: 'in'
-    });
+    const scrapeURL = `https://api.scrape.do/?url=${encodeURIComponent(amazonURL)}&token=${SCRAPER_TOKEN}`;
 
-    const options = {
-      hostname: 'api.apilayer.com',
-      path: `/adv_scraper/scraper?${params}`,
-      method: 'GET',
-      headers: { 'apikey': SCRAPER_KEY }
-    };
-
-    const req = https.request(options, (res) => {
+    https.get(scrapeURL, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
         try {
-          const json = JSON.parse(data);
-          if (res.statusCode !== 200 || !json.data) {
-            console.log(`  ⚠️  Scraper error for "${keyword}":`, json.message || json.error || `HTTP ${res.statusCode}`);
+          if (res.statusCode !== 200) {
+            console.log(`  ⚠️  Scraper error for "${keyword}": HTTP ${res.statusCode}`);
             resolve([]);
             return;
           }
-          const products = parseSearchResults(json.data);
+          // Scrape.do returns raw HTML directly (not wrapped in JSON)
+          const products = parseSearchResults(data);
           resolve(products);
         } catch (e) {
           console.log(`  ⚠️  Parse error for "${keyword}":`, e.message);
           resolve([]);
         }
       });
-    });
-
-    req.on('error', (e) => {
+    }).on('error', (e) => {
       console.log(`  ⚠️  Connection error for "${keyword}":`, e.message);
       resolve([]);
     });
-    req.end();
   });
 }
 
@@ -306,6 +293,48 @@ async function addToFirestore(product) {
     req.write(body);
     req.end();
   });
+}
+
+// ═══════════════════════════════════════════════════
+// ─── CATEGORY CORRECTION (Amazon-style reassignment) ───
+// Sometimes search results return products that belong in a different category.
+// This function fixes that BEFORE subcategory detection.
+// ═══════════════════════════════════════════════════
+function correctCategory(name, originalCat) {
+  const text = name.toLowerCase();
+
+  // ── Car & Motorbike products found in other categories ──
+  if (originalCat !== 'auto') {
+    if (/\bcar\b.*\b(holder|mount|stand|charger|freshener|cover|seat|vacuum|dash.?cam|gps|led|headlight)/.test(text)) return 'auto';
+    if (/\bbike\b.*\b(holder|mount|helmet|glove|lock|chain|cover)/.test(text)) return 'auto';
+    if (/\bmotorcycle|motorbike|scooter/.test(text) && !/\btoy|model|miniature/.test(text)) return 'auto';
+  }
+
+  // ── Baby products found in other categories ──
+  if (originalCat !== 'baby') {
+    if (/\bbaby\b.*\b(diaper|stroller|pram|carrier|bib|onesie|romper|cradle|walker|sippy|pacifier)/.test(text)) return 'baby';
+    if (/\bnewborn|infant\b.*\b(cloth|dress|shoe|sock|blanket|swaddle)/.test(text)) return 'baby';
+  }
+
+  // ── Pet products found in other categories ──
+  if (originalCat !== 'pets') {
+    if (/\b(dog|cat|puppy|kitten)\b.*\b(food|treat|collar|leash|toy|bed|bowl|shampoo|litter)/.test(text)) return 'pets';
+    if (/\baquarium|fish.?tank|bird.?cage/.test(text)) return 'pets';
+  }
+
+  // ── Sports products found in other categories ──
+  if (originalCat !== 'sports') {
+    if (/\bcricket\b.*\b(bat|ball|pad|glove|helmet|stump)/.test(text)) return 'sports';
+    if (/\bbadminton\b.*\b(racket|shuttlecock)/.test(text)) return 'sports';
+    if (/\bdumbbell|barbell|kettlebell|treadmill\b/.test(text)) return 'sports';
+  }
+
+  // ── Grocery products found in other categories ──
+  if (originalCat !== 'grocery') {
+    if (/\b(basmati|rice|dal|atta|flour|ghee|masala|spice)\b.*\b(pack|kg|gram|organic|pure)/.test(text)) return 'grocery';
+  }
+
+  return originalCat; // no correction needed
 }
 
 // ═══════════════════════════════════════════════════
@@ -525,9 +554,9 @@ function upgradeImageURL(url) {
 async function main() {
   console.log('\n🚀 DealKart Auto-Deal Finder (Scraper Edition)');
   console.log('═'.repeat(55));
-  console.log('   🔧 Engine: APILayer Advanced Scraper');
+  console.log('   🔧 Engine: Scrape.do');
   console.log(`   🏷️  Partner Tag: ${PARTNER_TAG}`);
-  console.log(`   🔑 Scraper Key: ${SCRAPER_KEY.substring(0, 8)}...`);
+  console.log(`   🔑 Scraper Token: ${SCRAPER_TOKEN.substring(0, 8)}...`);
 
   // Get existing ASINs to avoid duplicates
   console.log('\n📦 Checking existing products...');
@@ -577,10 +606,13 @@ async function main() {
         if (discount < 20) continue;
 
         // Build product object matching Firestore schema
+        // Step 1: Correct category if product belongs elsewhere (e.g., car holder found in electronics)
+        const correctedCat = correctCategory(raw.title, catConfig.cat);
+        // Step 2: Detect subcategory based on corrected category
         const product = {
           name: raw.title,
-          cat: catConfig.cat,
-          subcat: detectSubcategory(raw.title, catConfig.cat),
+          cat: correctedCat,
+          subcat: detectSubcategory(raw.title, correctedCat),
           price: raw.price,
           was: raw.was,
           rating: raw.rating,
@@ -752,27 +784,20 @@ async function getExistingProducts() {
 function scrapeProductPrice(asin) {
   return new Promise((resolve) => {
     const amazonURL = `https://www.amazon.in/dp/${asin}`;
-    const params = new URLSearchParams({ url: amazonURL, country: 'in' });
+    const scrapeURL = `https://api.scrape.do/?url=${encodeURIComponent(amazonURL)}&token=${SCRAPER_TOKEN}`;
 
-    const options = {
-      hostname: 'api.apilayer.com',
-      path: `/adv_scraper/scraper?${params}`,
-      method: 'GET',
-      headers: { 'apikey': SCRAPER_KEY }
-    };
-
-    const req = https.request(options, (res) => {
+    https.get(scrapeURL, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
         try {
-          const json = JSON.parse(data);
-          if (res.statusCode !== 200 || !json.data) {
+          if (res.statusCode !== 200) {
             resolve(null);
             return;
           }
 
-          const html = json.data;
+          // Scrape.do returns raw HTML directly
+          const html = data;
 
           // Extract current price from product page
           let price = 0;
@@ -797,9 +822,7 @@ function scrapeProductPrice(asin) {
           resolve(null);
         }
       });
-    });
-    req.on('error', () => resolve(null));
-    req.end();
+    }).on('error', () => resolve(null));
   });
 }
 

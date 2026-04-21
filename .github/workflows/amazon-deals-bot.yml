@@ -30,8 +30,8 @@ jobs:
         AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
         AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
         AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
-        # APILayer Advanced Scraper (primary engine)
-        APILAYER_KEY: ${{ secrets.APILAYER_KEY }}
+        # Scrape.do Scraper (primary engine)
+        SCRAPEDO_TOKEN: ${{ secrets.SCRAPEDO_TOKEN }}
         # Firebase
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
