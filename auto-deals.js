@@ -650,7 +650,135 @@ async function main() {
   console.log('\n🔄 Running live price check on existing products...');
   await refreshPrices();
 
+  // ─── RE-CHECK HIDDEN PRODUCTS ───
+  console.log('\n👻 Re-checking hidden products (may reactivate or delete)...');
+  await recheckHiddenProducts();
+
   console.log('\n✅ All done!\n');
+}
+
+// ═══════════════════════════════════════════════════
+// ─── RE-CHECK HIDDEN PRODUCTS ───
+// Products marked active:false may come back in stock.
+// - Re-check 5 hidden products per cycle (oldest deactivated first)
+// - If back in stock with valid price → reactivate
+// - If hidden for 30+ days and still unavailable → delete from Firestore
+// ═══════════════════════════════════════════════════
+const HIDDEN_RECHECK_DAYS = 15;  // Re-check hidden products after this many days
+const HIDDEN_DELETE_DAYS = 30;   // Delete hidden products after this many days
+
+async function recheckHiddenProducts() {
+  const products = await getExistingProducts();
+  const hiddenProducts = products.filter(p => !p.active);
+  console.log(`   👻 Found ${hiddenProducts.length} hidden products`);
+
+  if (hiddenProducts.length === 0) {
+    console.log('   ✅ No hidden products to check');
+    return;
+  }
+
+  const now = new Date();
+  const recheckMs = HIDDEN_RECHECK_DAYS * 24 * 60 * 60 * 1000;
+  const deleteMs = HIDDEN_DELETE_DAYS * 24 * 60 * 60 * 1000;
+
+  // Sort by oldest first
+  hiddenProducts.sort((a, b) => a.priceUpdatedAt - b.priceUpdatedAt);
+
+  let reactivated = 0;
+  let deleted = 0;
+  let checked = 0;
+
+  // Check up to 5 hidden products per cycle
+  const toCheck = hiddenProducts.slice(0, 5);
+
+  for (const product of toCheck) {
+    const ageMs = now - product.priceUpdatedAt;
+    const ageDays = Math.round(ageMs / (24 * 60 * 60 * 1000));
+
+    // If hidden for 30+ days → delete from Firestore
+    if (ageMs >= deleteMs) {
+      const relativePath = product.docPath.split('/documents/')[1];
+      if (relativePath) {
+        const success = await deleteFromFirestore(relativePath);
+        if (success) {
+          deleted++;
+          console.log(`   🗑️  Deleted: ${product.name.substring(0, 40)}... (hidden ${ageDays}d)`);
+        }
+      }
+      continue;
+    }
+
+    // If hidden for 15+ days → re-check availability
+    if (ageMs >= recheckMs) {
+      console.log(`   🔍 Re-checking: ${product.name.substring(0, 40)}... (hidden ${ageDays}d)`);
+      const priceData = await scrapeProductPrice(product.asin);
+      checked++;
+
+      if (priceData && !priceData.unavailable && priceData.price > 0) {
+        // Product is back! Reactivate it
+        await reactivateProduct(product.docPath, priceData.price, priceData.was || product.was);
+        reactivated++;
+        console.log(`   ✅ Reactivated: ${product.name.substring(0, 40)}... (₹${priceData.price})`);
+      } else {
+        // Still unavailable — stamp the check time
+        await updateProductPrice(product.docPath, product.price, product.was);
+      }
+
+      // Rate limit
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+
+  console.log(`   📊 Hidden check: ${reactivated} reactivated, ${deleted} deleted, ${checked} re-checked`);
+}
+
+function reactivateProduct(docPath, price, was) {
+  return new Promise((resolve) => {
+    const relativePath = docPath.split('/documents/')[1];
+    if (!relativePath) { resolve(false); return; }
+
+    const body = JSON.stringify({
+      fields: {
+        active: { booleanValue: true },
+        price: { integerValue: String(price) },
+        was: { integerValue: String(was) },
+        priceUpdatedAt: { timestampValue: new Date().toISOString() }
+      }
+    });
+    const options = {
+      hostname: 'firestore.googleapis.com',
+      path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${relativePath}?updateMask.fieldPaths=active&updateMask.fieldPaths=price&updateMask.fieldPaths=was&updateMask.fieldPaths=priceUpdatedAt`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve(res.statusCode === 200));
+    });
+    req.on('error', () => resolve(false));
+    req.write(body);
+    req.end();
+  });
+}
+
+function deleteFromFirestore(relativePath) {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'firestore.googleapis.com',
+      path: `/v1/projects/${FB_PROJECT}/databases/(default)/documents/${relativePath}`,
+      method: 'DELETE'
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve(res.statusCode === 200));
+    });
+    req.on('error', () => resolve(false));
+    req.end();
+  });
 }
 
 // ═══════════════════════════════════════════════════
