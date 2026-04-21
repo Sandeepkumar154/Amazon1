@@ -1001,6 +1001,42 @@ function detectSubcategory(name, breadcrumb, cat) {
       { sub: 'Bird Supplies', words: ['bird', 'parrot', 'cage', 'bird food', 'bird seed', 'bird toy', 'perch'] },
       { sub: 'Pet Grooming', words: ['pet grooming', 'pet shampoo', 'pet brush', 'nail clipper', 'grooming kit', 'flea'] },
       { sub: '_auto_', words: ['_placeholder_'] }
+    ],
+    sports: [
+      { sub: 'Cricket', words: ['cricket', 'bat', 'ball', 'wicket', 'pads', 'helmet', 'stump'] },
+      { sub: 'Football', words: ['football', 'soccer', 'goal', 'shin guard', 'boots', 'cleats'] },
+      { sub: 'Badminton & Tennis', words: ['badminton', 'tennis', 'racket', 'shuttlecock', 'grip', 'net', 'squash'] },
+      { sub: 'Gym & Fitness', words: ['gym', 'dumbbell', 'weight', 'kettlebell', 'bench', 'barbell', 'fitness'] },
+      { sub: 'Yoga', words: ['yoga', 'mat', 'block', 'belt', 'pilates'] },
+      { sub: 'Running & Walking', words: ['run', 'walking', 'treadmill', 'shoe', 'track'] },
+      { sub: 'Cycling', words: ['cycle', 'cycling', 'bicycle', 'bike', 'helmet', 'pump'] },
+      { sub: 'Swimming', words: ['swim', 'goggle', 'cap', 'costume', 'pool', 'float'] },
+      { sub: 'Sports Nutrition', words: ['protein', 'whey', 'creatine', 'bcaa', 'nutrition', 'supplement', 'pre workout', 'energy'] }
+    ],
+    grocery: [
+      { sub: 'Snacks & Beverages', words: ['snack', 'biscuit', 'chip', 'namkeen', 'cookie', 'cracker', 'noodle', 'pasta', 'popcorn'] },
+      { sub: 'Cooking Essentials', words: ['oil', 'ghee', 'rice', 'flour', 'dal', 'pulse', 'sugar', 'salt', 'wheat', 'atta', 'cooking'] },
+      { sub: 'Dry Fruits & Nuts', words: ['almond', 'cashew', 'pistachio', 'walnut', 'raisin', 'date', 'dry fruit', 'nut', 'seed'] },
+      { sub: 'Spices & Masala', words: ['spice', 'masala', 'chilli', 'turmeric', 'cumin', 'coriander', 'pepper', 'cardamom'] },
+      { sub: 'Health & Organic Foods', words: ['organic', 'healthy', 'oats', 'muesli', 'honey', 'peanut butter', 'protein bar', 'diet', 'jaggery'] },
+      { sub: 'Dairy & Chocolates', words: ['dairy', 'milk', 'cheese', 'butter', 'chocolate', 'candy', 'sweet', 'dessert'] },
+      { sub: 'Tea, Coffee & Drinks', words: ['tea', 'coffee', 'drink', 'juice', 'beverage', 'squash', 'syrup', 'water'] }
+    ],
+    auto: [
+      { sub: 'Car Accessories', words: ['car', 'seat cover', 'perfume', 'freshener', 'mat', 'sun shade', 'wiper', 'accessory'] },
+      { sub: 'Motorbike Accessories', words: ['bike', 'motor', 'riding', 'saddle', 'tank bag', 'chain lube', 'bike cover'] },
+      { sub: 'Car Electronics', words: ['dash cam', 'charger', 'stereo', 'speaker', 'display', 'tracker', 'gps', 'sensor', 'camera', 'vacuum'] },
+      { sub: 'Helmets & Gloves', words: ['helmet', 'glove', 'jacket', 'guard', 'riding gear', 'visor'] },
+      { sub: 'Car Care', words: ['wax', 'polish', 'shampoo', 'clean', 'cloth', 'microfiber', 'brush', 'sponge', 'spray'] },
+      { sub: 'Tools & Auto Parts', words: ['tool', 'compress', 'inflator', 'pump', 'jack', 'wrench', 'battery', 'cable', 'part', 'light', 'bulb'] }
+    ],
+    office: [
+      { sub: 'Pens & Writing', words: ['pen', 'pencil', 'marker', 'highlighter', 'ink', 'refill', 'writing'] },
+      { sub: 'Notebooks & Notepads', words: ['notebook', 'diary', 'notepad', 'journal', 'paper', 'register'] },
+      { sub: 'Desk Accessories', words: ['desk', 'organizer', 'stapler', 'punch', 'clip', 'folder', 'file', 'tape', 'glue', 'scissors'] },
+      { sub: 'Printers & Ink', words: ['print', 'ink', 'toner', 'cartridge', 'scanner', 'shredder', 'laminate'] },
+      { sub: 'School Supplies', words: ['school', 'bag', 'backpack', 'geometry', 'lunch box', 'water bottle', 'bottle'] },
+      { sub: 'Art & Craft Supplies', words: ['art', 'craft', 'color', 'colour', 'paint', 'brush', 'canvas', 'sketch', 'clay', 'origami'] }
     ]
   };
   var rules = subRules[cat] || [];
