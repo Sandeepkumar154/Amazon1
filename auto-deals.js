@@ -757,13 +757,17 @@ async function getExistingProducts() {
               const asinMatch = link.match(/\/dp\/([A-Z0-9]{10})/i);
               if (!asinMatch) return;
 
+              // Get the last price update timestamp (or product creation time as fallback)
+              const priceUpdatedAt = fields.priceUpdatedAt?.timestampValue || fields.ts?.timestampValue || '';
+
               products.push({
                 docPath: doc.name, // full Firestore path
                 asin: asinMatch[1],
                 name: fields.name?.stringValue || '',
                 price: parseInt(fields.price?.integerValue || '0'),
                 was: parseInt(fields.was?.integerValue || '0'),
-                active: fields.active?.booleanValue !== false
+                active: fields.active?.booleanValue !== false,
+                priceUpdatedAt: priceUpdatedAt ? new Date(priceUpdatedAt) : new Date(0)
               });
             });
 
@@ -883,24 +887,54 @@ function deactivateProduct(docPath) {
   });
 }
 
+// ─── SMART PRICE REFRESH ───
+// Only checks products whose price hasn't been verified in 5+ days.
+// Prioritizes oldest-checked products first. Updates price & MRP in Firestore.
+// Deactivates products that Amazon marks as unavailable.
+const STALE_DAYS = 5; // Only re-check products older than this many days
+
 async function refreshPrices() {
   const products = await getExistingProducts();
   const activeProducts = products.filter(p => p.active);
-  console.log(`   📦 Found ${activeProducts.length} active products to check`);
+  console.log(`   📦 Found ${activeProducts.length} active products total`);
 
-  // Check up to 10 products per cycle (conserve API quota)
-  // Pick the oldest-updated or random selection
-  const toCheck = activeProducts.sort(() => Math.random() - 0.5).slice(0, 10);
+  // Filter to only products that haven't been price-checked in 5+ days
+  const now = new Date();
+  const staleMs = STALE_DAYS * 24 * 60 * 60 * 1000;
+  const staleProducts = activeProducts.filter(p => {
+    const age = now - p.priceUpdatedAt;
+    return age >= staleMs;
+  });
+
+  console.log(`   ⏰ ${staleProducts.length} products are ${STALE_DAYS}+ days stale`);
+
+  if (staleProducts.length === 0) {
+    console.log(`   ✅ All products are fresh (checked within ${STALE_DAYS} days)`);
+    return;
+  }
+
+  // Sort by oldest-checked first, then pick up to 10 per cycle
+  staleProducts.sort((a, b) => a.priceUpdatedAt - b.priceUpdatedAt);
+  const toCheck = staleProducts.slice(0, 10);
+
+  console.log(`   🔄 Checking ${toCheck.length} oldest products this cycle...`);
 
   let updated = 0;
   let deactivated = 0;
   let unchanged = 0;
+  let priceStamped = 0;
 
   for (const product of toCheck) {
+    const daysSinceCheck = Math.round((now - product.priceUpdatedAt) / (24 * 60 * 60 * 1000));
+    console.log(`   🔍 Checking: ${product.name.substring(0, 40)}... (${daysSinceCheck}d old)`);
+
     const priceData = await scrapeProductPrice(product.asin);
 
     if (!priceData) {
       unchanged++;
+      // Still stamp the check time so we don't re-check immediately
+      await updateProductPrice(product.docPath, product.price, product.was);
+      priceStamped++;
       continue;
     }
 
@@ -908,25 +942,39 @@ async function refreshPrices() {
       // Product no longer available — hide it
       await deactivateProduct(product.docPath);
       deactivated++;
-      console.log(`   ❌ Deactivated: ${product.name.substring(0, 40)}... (unavailable)`);
+      console.log(`   ❌ Deactivated: ${product.name.substring(0, 40)}... (unavailable on Amazon)`);
       continue;
     }
 
-    if (priceData.price > 0 && priceData.price !== product.price) {
+    if (priceData.price > 0) {
       const oldPrice = product.price;
-      await updateProductPrice(product.docPath, priceData.price, priceData.was || product.was);
-      updated++;
-      const arrow = priceData.price < oldPrice ? '📉' : '📈';
-      console.log(`   ${arrow} Updated: ${product.name.substring(0, 40)}... ₹${oldPrice} → ₹${priceData.price}`);
+      const oldWas = product.was;
+      const newPrice = priceData.price;
+      const newWas = priceData.was || product.was;
+
+      if (newPrice !== oldPrice || newWas !== oldWas) {
+        await updateProductPrice(product.docPath, newPrice, newWas);
+        updated++;
+        const arrow = newPrice < oldPrice ? '📉' : (newPrice > oldPrice ? '📈' : '🔄');
+        console.log(`   ${arrow} Price: ₹${oldPrice} → ₹${newPrice} | MRP: ₹${oldWas} → ₹${newWas}`);
+      } else {
+        // Price unchanged but stamp the check time
+        await updateProductPrice(product.docPath, product.price, product.was);
+        unchanged++;
+        priceStamped++;
+      }
     } else {
       unchanged++;
     }
 
-    // Rate limit
+    // Rate limit (2s between scrapes)
     await new Promise(r => setTimeout(r, 2000));
   }
 
-  console.log(`   📊 Price check: ${updated} updated, ${deactivated} deactivated, ${unchanged} unchanged`);
+  console.log(`   📊 Price check: ${updated} updated, ${deactivated} deactivated, ${unchanged} unchanged, ${priceStamped} timestamps refreshed`);
+  if (staleProducts.length > toCheck.length) {
+    console.log(`   ⏳ ${staleProducts.length - toCheck.length} more stale products will be checked in next cycles`);
+  }
 }
 
 main().catch(console.error);
