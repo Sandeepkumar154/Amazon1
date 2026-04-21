@@ -179,14 +179,14 @@ function goDeals(cat) {
     filterDeals(cat, null);
     document.querySelectorAll('#page-deals .filter-btn').forEach(b => {
       b.classList.remove('active');
-      if (b.textContent.toLowerCase().includes(cat) || (cat === 'all' && b.textContent === 'All Deals'))
+      if (b.textContent.toLowerCase().includes(cat) || (cat === 'all' && b.textContent.includes('All Deals')))
         b.classList.add('active');
     });
   } else {
     filterDeals('all', null);
     document.querySelectorAll('#page-deals .filter-btn').forEach(b => {
       b.classList.remove('active');
-      if (b.textContent === 'All Deals') b.classList.add('active');
+      if (b.textContent.includes('All Deals')) b.classList.add('active');
     });
   }
 }
